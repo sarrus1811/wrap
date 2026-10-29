@@ -1,4 +1,34 @@
-﻿function Show-ProgramDetails {
+﻿# 1. Automatically Relaunch in PowerShell 7 as Administrator
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
+    Write-Host "Legacy PowerShell or standard privileges detected. Relaunching in PowerShell 7 as Administrator..." -ForegroundColor Yellow
+    $pwshPath = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { 
+        (Get-Command pwsh.exe).Source 
+    }
+    elseif (Test-Path "$env:ProgramFiles\PowerShell\7\pwsh.exe") {
+        "$env:ProgramFiles\PowerShell\7\pwsh.exe"
+    }
+    else {
+        "pwsh.exe"
+    }
+    
+    try {
+        Start-Process -FilePath $pwshPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs -ErrorAction Stop
+        exit
+    }
+    catch {
+        Write-Host "[✗] Failed to launch pwsh.exe. Ensure PowerShell 7 is installed." -ForegroundColor Red
+        Write-Host "Error details: $($_.Exception.Message)" -ForegroundColor Red
+        Pause
+        exit
+    }
+}
+
+$env:IgnoreSpectreEncoding = $true
+$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+
+function Show-ProgramDetails {
     param (
         [psobject]$program
     )
@@ -84,61 +114,46 @@ function Get-ProgramByName {
     }
 }
 
-# Starts a Microsoft developer environment
-function Invoke-VisualStudioEnvironment {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false)]
-        [ValidateSet("x86", "x64")]
-        [string]$Arch = "x64"
+# Check if Visual Studio Build tools are installed (Updated for VS 2026)
+function Invoke-VisualCppCheck {
+    $BuildToolsId = "Microsoft.VisualStudio.BuildTools"
+    $VCToolsWorkload = "Microsoft.VisualStudio.Workload.VCTools"
+
+    Write-Host "`n--- Checking for existing Visual C++ Build Tools ---" -ForegroundColor Cyan
+
+    $InstallCheck = winget list --id $BuildToolsId --exact 2>$null
+    if ($InstallCheck -match $BuildToolsId) {
+        Write-Host "[✓] Microsoft Visual Studio Build Tools found." -ForegroundColor Green
+        return
+    }
+
+    Write-Host "Visual C++ Build Tools not found. Starting silent installation (this WILL take several minutes/gigabytes)..." -ForegroundColor Yellow
+    
+    $OverrideArgs = "--quiet --wait --norestart --add $VCToolsWorkload --includeRecommended"
+
+    $wingetArgs = @(
+        "install", "-e", "--id", $BuildToolsId, 
+        "--source", "winget", 
+        "--override", $OverrideArgs,
+        "--accept-package-agreements",
+        "--accept-source-agreements"
     )
 
-    # Path to the discovery tool
-    $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-
-    if (-not (Test-Path $vswherePath)) {
-        Write-Error "Error: vswhere.exe not found. Ensure Visual Studio Build Tools 2022 is installed."
-        return $false
-    }
-
-    # Locate the installation directory containing vcvarsall.bat
-    Write-Host "Searching for Visual Studio 2022 Build Tools (Target Arch: $Arch)..." -ForegroundColor Yellow
-
-    $VSInstallPath = & $vswherePath -latest -products * -prerelease -property installationPath -format value | Select-Object -First 1
-
-    if ([string]::IsNullOrWhiteSpace($VSInstallPath)) {
-        Write-Error "Error: Could not locate Visual Studio installation path. Ensure the C++ tools are installed."
-        return $false
-    }
-
-    # Construct the full path to the environment setup script
-    $vcvarsall = Join-Path $VSInstallPath "VC\Auxiliary\Build\vcvarsall.bat"
-
-    if (-not (Test-Path $vcvarsall)) {
-        Write-Error "Error: vcvarsall.bat not found at '$vcvarsall'. Ensure the 'Desktop development with C++' workload is installed."
-        return $false
-    }
-
-    # Execute the batch file within the current session using the call operator ('.')
-    Write-Host "Initializing C++ environment by executing: '$vcvarsall' $Arch" -ForegroundColor Cyan
-
     try {
-        . "$vcvarsall" $Arch
-        Write-Host "Environment setup complete (Verified by successful installation)." -ForegroundColor Green
+        & winget @wingetArgs
+        if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) { 
+            Write-Host "[✓] Installation complete!" -ForegroundColor Green
+        }
+        else {
+            Write-Host "[✗] Installation failed with exit code $LASTEXITCODE." -ForegroundColor Red
+        }
     }
     catch {
-        Write-Error "Failed to execute vcvarsall.bat. Check permissions or internal vcvarsall errors."
-        return $false
+        Write-Host "[✗] Installation failed. Error details: $($_.Exception.Message)" -ForegroundColor Red
     }
-
-    # Final Confirmation.
-    Write-Host "Environment is configured. The compiler is available to subsequent commands." -ForegroundColor Green
-    return $true
 }
 
-# ----------------------------------------------------------------------------------
 # --- Environment / Pre-requisite Checks ---
-# ----------------------------------------------------------------------------------
 # Test internet connection over HTTPS
 function Test-Internet {
     Write-Host "--- Checking Internet Connection ---" -ForegroundColor Cyan
@@ -165,7 +180,7 @@ function Test-Firewall {
     try {
         $service = Get-Service -Name "MpsSvc" -ErrorAction Stop
         if ($service.Status -eq "Running") {
-            Write-Host "[✗] Windows Firewall is running." -ForegroundColor Red
+            Write-Host "[!] Windows Firewall is running." -ForegroundColor Yellow
             return $true
         }
         else {
@@ -184,7 +199,7 @@ function Test-Defender {
     try {
         $service = Get-Service -Name "WinDefend" -ErrorAction Stop
         if ($service.Status -eq "Running") {
-            Write-Host "[✗] Windows Defender is running." -ForegroundColor Red
+            Write-Host "[!] Windows Defender is running." -ForegroundColor Yellow
             return $true
         }
         else {
@@ -203,7 +218,7 @@ function Test-WindowsUpdate {
     try {
         $service = Get-Service -Name "wuauserv" -ErrorAction Stop
         if ($service.StartType -ne "Disabled") {
-            Write-Host "[✗] Windows Update is not disabled (Current State: $($service.StartType)). This may cause network noise." -ForegroundColor Red
+            Write-Host "[!] Windows Update is not disabled (Current State: $($service.StartType)). This may cause network noise." -ForegroundColor Yellow
             return $true
         }
         else {
@@ -241,7 +256,7 @@ function Invoke-FolderCheck {
     }
 }
 
-# Check ifor git installations
+# Check for git installations
 function Invoke-GitCheck {
     $GitPackageId = "Git.Git"
     Write-Host "`n--- Checking for Git installation ---" -ForegroundColor Cyan
@@ -257,6 +272,7 @@ function Invoke-GitCheck {
 
     $wingetArgs = @(
         "install", "-e", "--id", $GitPackageId, 
+        "--source", "winget", 
         "--silent", 
         "--accept-package-agreements", 
         "--accept-source-agreements", 
@@ -289,12 +305,12 @@ function Invoke-MiseCheck {
 
     $wingetArgs = @(
         "install", "-e", "--id", $MisePackageId, 
+        "--source", "winget", 
         "--silent", 
         "--accept-package-agreements", 
         "--accept-source-agreements", 
         "--disable-interactivity"
     )
-
     & winget @wingetArgs
 
     if ($LASTEXITCODE -eq 0) {
@@ -318,12 +334,28 @@ function Invoke-VisualCppCheck {
         return
     }
 
-    Write-Host "Visual C++ Build Tools not found. Starting silent installation (this may take several minutes)..." -ForegroundColor Yellow
-    $OverrideArgs = "--quiet --add $VCToolsWorkload --includeRecommended"
+    Write-Host "Visual C++ Build Tools not found. Starting silent installation (this WILL take several minutes/gigabytes)..." -ForegroundColor Yellow
+    
+    $OverrideArgs = "--quiet --wait --norestart --add $VCToolsWorkload --includeRecommended"
+
+    $wingetArgs = @(
+        "install", "-e", "--id", $BuildToolsId, 
+        "--source", "winget", 
+        "--override", $OverrideArgs,
+        "--accept-package-agreements",
+        "--accept-source-agreements"
+    )
 
     try {
-        Start-Process -FilePath "winget" -ArgumentList "install", "--id", $BuildToolsId, "--exact", "--source", "winget", "--override", "`"$OverrideArgs`"" -Wait -NoNewWindow -ErrorAction Stop
-        Write-Host "[✓] Installation complete!" -ForegroundColor Green
+        & winget @wingetArgs
+        
+        # 3010 - exit code for "Success, but a reboot is required"
+        if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) { 
+            Write-Host "[✓] Installation complete!" -ForegroundColor Green
+        }
+        else {
+            Write-Host "[✗] Installation failed with exit code $LASTEXITCODE." -ForegroundColor Red
+        }
     }
     catch {
         Write-Host "[✗] Installation failed. Error details: $($_.Exception.Message)" -ForegroundColor Red
@@ -360,7 +392,7 @@ function Init {
     Write-Host "Checking PowerShell Execution Policy for scope: $($ScopeToCheck)..." -ForegroundColor Yellow
     $currentPolicy = Get-ExecutionPolicy -Scope $ScopeToCheck
     if ($currentPolicy -ne "Unrestricted") {
-        Write-Host "[!] - The execution policy for '$ScopeToCheck' is set to '$currentPolicy'. This is NOT Unrestricted." -ForegroundColor Red
+        Write-Host "[✗] - The execution policy for '$ScopeToCheck' is set to '$currentPolicy'. This is NOT Unrestricted." -ForegroundColor Red
     }
     
     $null = Test-Internet
@@ -370,9 +402,9 @@ function Init {
     Invoke-FolderCheck -Folders @("C:\WRAP", "C:\WRAP\bin", "C:\WRAP\mise", "C:\WRAP\plugins")
     Invoke-GitCheck
     Invoke-MiseCheck
-    #Invoke-VisualCppCheck
+    Invoke-VisualCppCheck
     Invoke-SpectreCheck
-    Import-Module PwshSpectreConsole -ErrorAction SilentlyContinue
+    Import-Module PwshSpectreConsole -Global 
     Write-Host "`n-------------------------------------" -ForegroundColor Cyan
     if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
         Write-Host "Press Enter to continue..." -ForegroundColor Cyan
@@ -386,47 +418,37 @@ function Install-idaPlugins {
     param(
         [string]$Location
     )
-    Write-Host "Installing IDA plugins into $Location"
+    Write-Host "`nInstalling IDA plugins into $Location" -ForegroundColor Cyan
 
-    # # Install IDA Capa plugin
-    # Invoke-Expression "git clone https://github.com/mandiant/capa.git"
+    # Change to the IDA plugins directory before cloning
+    $PluginPath = Join-Path $Location "plugins"
+    if (-not (Test-Path $PluginPath)) { New-Item -ItemType Directory -Path $PluginPath | Out-Null }
+    Set-Location $PluginPath
 
-    # # Install IDA comida plugin
-    # Invoke-Expression "git clone https://github.com/airbus-cert/comida.git"
-
-    # # Install IDA Dereferencing plugin
-    # Invoke-Expression "git clone https://github.com/danigargu/deREferencing.git"
-
-    # # Install IDA Diaphora plugin
-    # Invoke-Expression "git clone https://github.com/joxeankoret/diaphora.git"
-
-    # # Install IDA Flare plugin
-    # Invoke-Expression "git clone https://github.com/mandiant/flare-ida.git"
-
-    # # Install IDA IFL plugin
-    # Invoke-Expression "git clone https://github.com/hasherezade/ida_ifl.git"
-
-    # # Install IDA xray plugin
-    # Invoke-Expression "git clone https://github.com/patois/xray.git"
-
-    # # Install IDA xrefer plugin
-    # Invoke-Expression "git clone https://github.com/mandiant/xrefer.git"
-
-    # Copy-Item -Path "C:\THisDOesntExistss" -Destination "$Location" -Recurse
+    Invoke-Expression "git clone https://github.com/mandiant/capa.git"
+    Invoke-Expression "git clone https://github.com/airbus-cert/comida.git"
+    Invoke-Expression "git clone https://github.com/danigargu/deREferencing.git"
+    Invoke-Expression "git clone https://github.com/joxeankoret/diaphora.git"
+    Invoke-Expression "git clone https://github.com/mandiant/flare-ida.git"
+    Invoke-Expression "git clone https://github.com/hasherezade/ida_ifl.git"
+    Invoke-Expression "git clone https://github.com/patois/xray.git"
+    Invoke-Expression "git clone https://github.com/mandiant/xrefer.git"
 }
 
 # Install x64dbg plugins
 function Install-x64dbgPlugins {
-    Write-Host "Installing x64dbg plugins into $Location"
-    # Install x64dbg ScyllaHide plugin
-    # Invoke-Expression "git clone https://github.com/x64dbg/ScyllaHide.git"
+    param(
+        [string]$Location
+    )
+    Write-Host "`nInstalling x64dbg plugins into $Location" -ForegroundColor Cyan
 
-    # # Install x64dbg TitanHide plugin
-    # Invoke-Expression "git clone https://github.com/mrexodia/TitanHide.git"
+    $PluginPath = Join-Path $Location "plugins"
+    if (-not (Test-Path $PluginPath)) { New-Item -ItemType Directory -Path $PluginPath | Out-Null }
+    Set-Location $PluginPath
 
-    # # Install x64dbg DbgChild plugin
-    # Invoke-Expression "git clone https://github.com/therealdreg/DbgChild.git"
-
+    Invoke-Expression "git clone https://github.com/x64dbg/ScyllaHide.git"
+    Invoke-Expression "git clone https://github.com/mrexodia/TitanHide.git"
+    Invoke-Expression "git clone https://github.com/therealdreg/DbgChild.git"
 }
 
 # Install program using Winget
@@ -489,6 +511,31 @@ function Invoke-MiseInstall {
     }
 }
 
+# Install directly
+function Invoke-DirectInstall {
+    param (
+        [string]$Url,
+        [string]$ProgramName
+    )
+    $DestDir = "C:\WRAP\$ProgramName"
+    Invoke-FolderCheck -Folders @($DestDir)
+    $FileName = [System.IO.Path]::GetFileName(([Uri]$Url).AbsolutePath)
+    $OutFile = Join-Path $DestDir $FileName
+
+    Write-Host "`nDownloading $ProgramName from $Url..." -ForegroundColor Cyan
+    Invoke-WebRequest -Uri $Url -OutFile $OutFile -UseBasicParsing
+
+    if ($FileName -match '\.msi$') {
+        Write-Host "Installing MSI package for $ProgramName..." -ForegroundColor Cyan
+        Start-Process "msiexec.exe" -ArgumentList "/i `"$OutFile`" /qn /norestart INSTALLDIR=`"$DestDir`"" -Wait
+    }
+    elseif ($FileName -match '\.zip$') {
+        Expand-Archive -Path $OutFile -DestinationPath $DestDir -Force
+        Remove-Item $OutFile -Force
+    }
+    Write-Host "[✓] Installed $ProgramName to $DestDir" -ForegroundColor Green
+}
+
 # Main installer function
 function Install-Program {
     param (
@@ -512,6 +559,11 @@ function Install-Program {
                 }
                 
                 Invoke-MiseInstall -MiseBackendSpec $program.Source[1]
+            }
+            "other" {
+                if ($Program.Source[1]) {
+                    Invoke-DirectInstall -Url $Program.Source[1] -ProgramName $Program.Name
+                }
             }
             Default {
                 Write-Host "Installer type '$installer' not recognized. Cannot install $($program.Name)." -ForegroundColor Red
