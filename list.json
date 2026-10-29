@@ -7,9 +7,7 @@
         "Source": [
             "winget",
             "SweetScape.010Editor"
-        ],
-        "Description": "Professional Text Editor + World's Best Hex Editor.",
-        "Documentation": "https://www.sweetscape.com/010editor/manual"
+        ]
     },
     {
         "Name": "7zip",
@@ -20,9 +18,7 @@
         "Source": [
             "winget",
             "7zip.7zip"
-        ],
-        "Description": "Open source file archiver.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "Advanced Installer",
@@ -32,9 +28,7 @@
         "Source": [
             "winget",
             "Caphyon.AdvancedInstaller"
-        ],
-        "Description": "Windows Installer Packaging Tool.",
-        "Documentation": "https://www.advancedinstaller.com/user-guide"
+        ]
     },
     {
         "Name": "Alacritty",
@@ -44,9 +38,7 @@
         "Source": [
             "winget",
             "Alacritty.Alacritty"
-        ],
-        "Description": "Alacritty is a free and open-source GPU accelerated terminal emulator focused on performance and simplicity",
-        "Documentation": "https://github.com/alacritty/alacritty/wiki"
+        ]
     },
     {
         "Name": "Angr",
@@ -57,9 +49,7 @@
         "Source": [
             "mise",
             "pypi:angr"
-        ],
-        "Description": "Open-source binary analysis platform for Python.",
-        "Documentation": "https://docs.angr.io/en/latest"
+        ]
     },
     {
         "Name": "Autopsy",
@@ -69,9 +59,7 @@
         "Source": [
             "winget",
             "SleuthKit.Autopsy"
-        ],
-        "Description": "Autopsy is the premier end-to-end open source digital forensics platform.",
-        "Documentation": "https://sleuthkit.org/autopsy/docs/user-docs/4.22.0"
+        ]
     },
     {
         "Name": "API Monitor",
@@ -82,9 +70,7 @@
         "Source": [
             "other",
             ""
-        ],
-        "Description": "API Monitor is a software that monitors and displays API calls made by applications and services.",
-        "Documentation": "http://www.rohitab.com/category/api-monitor-tutorials"
+        ]
     },
     {
         "Name": "Apktool",
@@ -95,9 +81,7 @@
         "Source": [
             "mise",
             "github:iBotPeaches/Apktool"
-        ],
-        "Description": "A tool for reverse engineering Android apk files.",
-        "Documentation": "https://apktool.org/wiki/the-basics/intro"
+        ]
     },
     {
         "Name": "Asar",
@@ -107,9 +91,7 @@
         "Source": [
             "mise",
             "npm:@electron/asar"
-        ],
-        "Description": "Asar is a simple extensive archive format, it works like tar that concatenates all files together without compression, while having random access support.",
-        "Documentation": "https://github.com/electron/asar"
+        ]
     },
     {
         "Name": "AutoIt-Ripper",
@@ -120,9 +102,7 @@
         "Source": [
             "mise",
             "pypi:autoit-ripper"
-        ],
-        "Description": "This is a short python script that allows for extraction of 'compiled' AutoIt scripts from PE executables.",
-        "Documentation": "https://github.com/nazywam/AutoIt-Ripper"
+        ]
     },
     {
         "Name": "Binary Ninja",
@@ -134,9 +114,7 @@
         "Source": [
             "winget",
             "Vector35.BinaryNinja"
-        ],
-        "Description": "Binary Ninja is an interactive decompiler, disassembler, debugger, and binary analysis.",
-        "Documentation": "https://binary.ninja/support/#documentation"
+        ]
     },
     {
         "Name": "BinDiff",
@@ -146,9 +124,7 @@
         "Source": [
             "other",
             "https://github.com/google/bindiff/releases/download/v8/bindiff8.msi"
-        ],
-        "Description": "Quickly find differences and similarities in disassembled code.",
-        "Documentation": "https://github.com/google/bindiff/tree/main/docs"
+        ]
     },
     {
         "Name": "BlobRunner",
@@ -159,9 +135,7 @@
         "Source": [
             "mise",
             "github:OALabs/BlobRunner"
-        ],
-        "Description": "Quickly debug shellcode extracted during malware analysis.",
-        "Documentation": "https://github.com/OALabs/BlobRunner"
+        ]
     },
     {
         "Name": "Bytecode Viewer",
@@ -174,9 +148,7 @@
         "Source": [
             "mise",
             "github:Konloch/bytecode-viewer"
-        ],
-        "Description": "A Java 8+ Jar & Android APK Reverse Engineering Suite (Decompiler, Editor, Debugger & More).",
-        "Documentation": "https://github.com/Konloch/bytecode-viewer"
+        ]
     },
     {
         "Name": "Capa",
@@ -186,9 +158,7 @@
         "Source": [
             "mise",
             "github:mandiant/capa"
-        ],
-        "Description": "The FLARE team's open-source tool to identify capabilities in executable files.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "CodeTrack",
@@ -198,9 +168,7 @@
         "Source": [
             "other",
             "https://www.getcodetrack.com/releases/codetrack_1_0_3_3_multi.zip"
-        ],
-        "Description": "CodeTrack is a versatile profiler with some extra tricks up its sleeve.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "CryptoTester",
@@ -212,9 +180,7 @@
         "Source": [
             "mise",
             "github:Demonslay335/CryptoTester"
-        ],
-        "Description": "A utility for playing with cryptography, geared towards ransomware analysis.",
-        "Documentation": "https://github.com/Demonslay335/CryptoTester"
+        ]
     },
     {
         "Name": "Cutter",
@@ -228,9 +194,7 @@
         "Source": [
             "winget",
             "Rizin.Cutter"
-        ],
-        "Description": "Cutter's goal is to be an advanced FREE and open-source reverse-engineering platform while keeping the user experience at mind.",
-        "Documentation": "https://cutter.re/docs/user-docs.html"
+        ]
     },
     {
         "Name": "CyberChef",
@@ -243,9 +207,7 @@
         "Source": [
             "mise",
             "github:gchq/CyberChef"
-        ],
-        "Description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis.",
-        "Documentation": "https://github.com/gchq/CyberChef"
+        ]
     },
     {
         "Name": "dex2jar",
@@ -256,9 +218,7 @@
         "Source": [
             "mise",
             "github:pxb1988/dex2jar"
-        ],
-        "Description": "Tools to work with android .dex and java .class files.",
-        "Documentation": "https://github.com/pxb1988/dex2jar"
+        ]
     },
     {
         "Name": "decompyle3",
@@ -269,9 +229,7 @@
         "Source": [
             "mise",
             "pypi:decompyle3"
-        ],
-        "Description": "Python cross-version byte-code decompiler.",
-        "Documentation": "https://github.com/rocky/python-decompile3"
+        ]
     },
     {
         "Name": "Detect-It-Easy",
@@ -283,9 +241,7 @@
         "Source": [
             "winget",
             "horsicq.DIE-engine"
-        ],
-        "Description": "Detect It Easy (DiE) is a powerful tool for file type identification.",
-        "Documentation": "https://github.com/horsicq/Detect-It-Easy"
+        ]
     },
     {
         "Name": "dll_to_exe",
@@ -295,9 +251,7 @@
         "Source": [
             "mise",
             "github:hasherezade/dll_to_exe"
-        ],
-        "Description": "Converts a DLL into EXE.",
-        "Documentation": "https://github.com/hasherezade/dll_to_exe"
+        ]
     },
     {
         "Name": "Edit",
@@ -307,9 +261,7 @@
         "Source": [
             "winget",
             "Microsoft.Edit"
-        ],
-        "Description": "Terminal text editor from Microsoft.",
-        "Documentation": "https://github.com/microsoft/edit"
+        ]
     },
     {
         "Name": "Exeinfope",
@@ -319,9 +271,7 @@
         "Source": [
             "mise",
             "github:ExeinfoASL/ASL"
-        ],
-        "Description": "Free Windows Detector Software.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "Explorer Suite",
@@ -331,9 +281,7 @@
         "Source": [
             "other",
             "https://ntcore.com/files/ExplorerSuite.exe"
-        ],
-        "Description": "Explorer Suite is a comprehensive set of binary analysis tools for Windows PE (Portable Executable) files.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "fakenet-ng",
@@ -343,9 +291,7 @@
         "Source": [
             "mise",
             "pypi:flare-fakenet-ng"
-        ],
-        "Description": "FakeNet-NG - Next Generation Dynamic Network Analysis Tool.",
-        "Documentation": "https://github.com/mandiant/flare-fakenet-ng"
+        ]
     },
     {
         "Name": "FLOSS",
@@ -355,9 +301,7 @@
         "Source": [
             "winget",
             "Mandiant.FLOSS"
-        ],
-        "Description": "FLARE Obfuscated String Solver - Automatically extract obfuscated strings from malware.",
-        "Documentation": "https://github.com/mandiant/flare-floss/blob/master/doc/theory.md"
+        ]
     },
     {
         "Name": "GarbageMan",
@@ -367,9 +311,7 @@
         "Source": [
             "mise",
             "github:WithSecureLabs/GarbageMan"
-        ],
-        "Description": "GarbageMan is a set of tools designed for .NET heap analysis.",
-        "Documentation": "https://labs.withsecure.com/tools/garbageman"
+        ]
     },
     {
         "Name": "Ghidra",
@@ -381,22 +323,18 @@
         "Source": [
             "mise",
             "github:NationalSecurityAgency/ghidra"
-        ],
-        "Description": "Ghidra is a software reverse engineering (SRE) framework created and maintained by the National Security Agency Research Directorate.",
-        "Documentation": "https://ghidra.re"
+        ]
     },
     {
-        "Name": "Go",
+        "Name": "goresolver",
         "Category": [
-            "Compiler",
-            "Go"
+            "Disassembler",
+            "Static Analysis"
         ],
         "Source": [
-            "winget",
-            "GoLang.Go"
-        ],
-        "Description": "The Go programming language.",
-        "Documentation": "https://go.dev/doc"
+            "mise",
+            "pypi:goresolver"
+        ]
     },
     {
         "Name": "GoReSym",
@@ -407,9 +345,7 @@
         "Source": [
             "mise",
             "github:mandiant/GoReSym"
-        ],
-        "Description": "Go symbol recovery tool.",
-        "Documentation": "https://www.mandiant.com/resources/blog/golang-internals-symbol-recovery"
+        ]
     },
     {
         "Name": "hashmyfiles",
@@ -419,9 +355,7 @@
         "Source": [
             "winget",
             "NirSoft.HashMyFiles"
-        ],
-        "Description": "Hash stuff.",
-        "Documentation": "https://www.nirsoft.net/utils/hash_my_files.html"
+        ]
     },
     {
         "Name": "HollowsHunter",
@@ -431,9 +365,7 @@
         "Source": [
             "mise",
             "github:hasherezade/hollows_hunter"
-        ],
-        "Description": "Scans all running processes. Recognizes and dumps a variety of potentially malicious implants (replaced/implanted PEs, shellcodes, hooks, in-memory patches).",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "HxD",
@@ -443,9 +375,7 @@
         "Source": [
             "winget",
             "MHNexus.HxD"
-        ],
-        "Description": "HxD is a carefully designed and fast hex editor which, additionally to raw disk editing and modifying of main memory (RAM), handles files of any size.",
-        "Documentation": "https://mh-nexus.de/en/hxd"
+        ]
     },
     {
         "Name": "IDA Free",
@@ -457,9 +387,7 @@
         "Source": [
             "winget",
             "Hex-Rays.IDA.Free"
-        ],
-        "Description": "This (completely!) free version of IDA offers a privileged opportunity to see IDA in action.",
-        "Documentation": "https://hex-rays.com/documentation/"
+        ]
     },
     {
         "Name": "ILSpy",
@@ -470,9 +398,7 @@
         "Source": [
             "winget",
             "icsharpcode.ILSpy"
-        ],
-        "Description": ".NET Decompiler with support for PDB generation, ReadyToRun, Metadata (&more) - cross-platform!",
-        "Documentation": "https://github.com/icsharpcode/ILSpy/blob/master/doc/README.md"
+        ]
     },
     {
         "Name": "ImHex",
@@ -482,9 +408,7 @@
         "Source": [
             "winget",
             "WerWolv.ImHex"
-        ],
-        "Description": "A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.",
-        "Documentation": "https://docs.werwolv.net/imhex"
+        ]
     },
     {
         "Name": "Innoextract",
@@ -495,9 +419,7 @@
         "Source": [
             "winget",
             "dscharrer.innoextract"
-        ],
-        "Description": "A tool to unpack installers created by Inno Setup.",
-        "Documentation": "https://github.com/dscharrer/innoextract"
+        ]
     },
     {
         "Name": "jadx",
@@ -508,9 +430,7 @@
         "Source": [
             "winget",
             "Skylot.jadx"
-        ],
-        "Description": "Command line and GUI tools for producing Java source code from Android Dex and Apk files",
-        "Documentation": "https://github.com/skylot/jadx"
+        ]
     },
     {
         "Name": "jd-gui",
@@ -521,9 +441,7 @@
         "Source": [
             "mise",
             "github:java-decompiler/jd-gui"
-        ],
-        "Description": "A standalone Java Decompiler GUI.",
-        "Documentation": "https://github.com/java-decompiler/jd-gui"
+        ]
     },
     {
         "Name": "Magika",
@@ -533,9 +451,7 @@
         "Source": [
             "mise",
             "pypi:magika"
-        ],
-        "Description": "Fast and accurate AI powered file content types detection.",
-        "Documentation": "https://google.github.io/magika"
+        ]
     },
     {
         "Name": "malware-jail",
@@ -546,9 +462,7 @@
         "Source": [
             "mise",
             "npm:HynekPetrak/malware-jail"
-        ],
-        "Description": "Sandbox for semi-automatic Javascript malware analysis, deobfuscation and payload extraction. Written for Node.js.",
-        "Documentation": "https://github.com/HynekPetrak/malware-jail"
+        ]
     },
     {
         "Name": "NASM",
@@ -558,9 +472,7 @@
         "Source": [
             "winget",
             "NASM.NASM"
-        ],
-        "Description": "An asssembler for the x86 CPU architecture portable to nearly every modern platform, and with code generation for many platforms old and new.",
-        "Documentation": "https://www.nasm.us/docs.php"
+        ]
     },
     {
         "Name": "Nmap",
@@ -570,9 +482,7 @@
         "Source": [
             "winget",
             "Insecure.Nmap"
-        ],
-        "Description": "Nmap is a free and open source utility for network discovery and security auditing.",
-        "Documentation": "https://nmap.org/docs.html"
+        ]
     },
     {
         "Name": "PE-bear",
@@ -582,9 +492,7 @@
         "Source": [
             "winget",
             "hasherezade.PE-bear"
-        ],
-        "Description": "Portable Executable reversing tool with a friendly GUI.",
-        "Documentation": "https://hshrzd.wordpress.com/pe-bear"
+        ]
     },
     {
         "Name": "pefile",
@@ -594,9 +502,7 @@
         "Source": [
             "mise",
             "pypi:pefile"
-        ],
-        "Description": "pefile, Portable Executable reader module",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "pe-sieve",
@@ -607,9 +513,7 @@
         "Source": [
             "mise",
             "github:hasherezade/pe-sieve"
-        ],
-        "Description": "Scans a given process. Recognizes and dumps a variety of potentially malicious implants (replaced/injected PEs, shellcodes, hooks, in-memory patches).",
-        "Documentation": "https://hshrzd.wordpress.com/pe-sieve"
+        ]
     },
     {
         "Name": "pestudio",
@@ -619,9 +523,7 @@
         "Source": [
             "other",
             "https://www.winitor.com/tools/pestudio/current/pestudio.zip"
-        ],
-        "Description": "PE-Studio is a static analysis tool for Windows Portable Executable (PE) files.  Its primary function is to accelerate the initial malware assessment and triage by quickly finding suspicious artifacts within an executable file without having to run it.",
-        "Documentation": "https://www.winitor.com/references"
+        ]
     },
     {
         "Name": "ProcDOT",
@@ -631,9 +533,7 @@
         "Source": [
             "other",
             "https://www.procdot.com/download/procdot/binaries/procdot_1_22_57_windows.zip"
-        ],
-        "Description": "",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "pe-unmapper",
@@ -643,9 +543,7 @@
         "Source": [
             "mise",
             "github:hasherezade/pe_unmapper"
-        ],
-        "Description": "Small tool to convert beteween the PE alignments (raw and virtual).",
-        "Documentation": "https://github.com/hasherezade/pe_unmapper"
+        ]
     },
     {
         "Name": "pyinstxtractor-ng",
@@ -657,21 +555,30 @@
         "Source": [
             "mise",
             "pypi:pyinstxtractor-ng"
-        ],
-        "Description": "Python bytecode disassembler and decompiler.",
-        "Documentation": ""
+        ]
     },
     {
-        "Name": "The RAT King Parser",
+        "Name": "Rizin",
+        "Category": [
+            "Binary analysis",
+            "Decompiler",
+            "Debugger",
+            "Disassembler"
+        ],
+        "Source": [
+            "winget",
+            "Rizin.Rizin"
+        ]
+    },
+    {
+        "Name": "RAT King Parser",
         "Category": [
             "Threat hunting"
         ],
         "Source": [
             "mise",
             "pypi:rat-king-parser"
-        ],
-        "Description": "A robust, multiprocessing-capable, multi-family RAT config parser/config extractor for AsyncRAT, DcRAT, VenomRAT, QuasarRAT, XWorm, Xeno RAT, and cloned/derivative RAT families.",
-        "Documentation": "https://github.com/jeFF0Falltrades/rat_king_parser"
+        ]
     },
     {
         "Name": "Recaf",
@@ -682,9 +589,7 @@
         "Source": [
             "mise",
             "github:Col-E/Recaf-Launcher"
-        ],
-        "Description": "Recaf is a modern Java and Android reverse engineering tool.",
-        "Documentation": "https://recaf.coley.software/user/index.html"
+        ]
     },
     {
         "Name": "redress",
@@ -694,9 +599,7 @@
         "Source": [
             "mise",
             "github:mandiant/gostringungarbler"
-        ],
-        "Description": "Python tool to resolve all strings in Go binaries obfuscated by garble.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "RegCool",
@@ -707,9 +610,7 @@
         "Source": [
             "winget",
             "KurtZimmermann.RegCool"
-        ],
-        "Description": "RegCool is a very flexible editor for the Windows registry.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "Regshot",
@@ -720,9 +621,7 @@
         "Source": [
             "mise",
             "github:Seabreg/Regshot"
-        ],
-        "Description": "Regshot is a small, free and open-source registry compare utility that allows you to quickly take a snapshot of your registry and then compare it with a second one - done after doing system changes or installing a new software product.",
-        "Documentation": "https://github.com/Seabreg/Regshot"
+        ]
     },
     {
         "Name": "Resource Hacker",
@@ -733,9 +632,7 @@
         "Source": [
             "winget",
             "AngusJohnson.ResourceHacker"
-        ],
-        "Description": "a freeware resource compiler & decompiler for Windows applications",
-        "Documentation": "https://www.angusj.com/resourcehacker"
+        ]
     },
     {
         "Name": "sclauncher",
@@ -746,9 +643,7 @@
         "Source": [
             "mise",
             "github:jstrosch/sclauncher"
-        ],
-        "Description": "A small program written in C that is designed to load 32/64-bit shellcode and allow for execution or debugging. Can also output PE files from shellcode.",
-        "Documentation": "https://github.com/jstrosch/sclauncher"
+        ]
     },
     {
         "Name": "sfextract",
@@ -759,9 +654,7 @@
         "Source": [
             "mise",
             "dotnet:sfextract"
-        ],
-        "Description": "This is a tool to extract the contents (assemblies, configuration, ...) of a single file application to a directory.",
-        "Documentation": "https://github.com/Droppers/SingleFileExtractor"
+        ]
     },
     {
         "Name": "speakeasy",
@@ -771,9 +664,7 @@
         "Source": [
             "mise",
             "pypi:speakeasy-emulator"
-        ],
-        "Description": "Windows kernel and user mode emulation.",
-        "Documentation": "https://cloud.google.com/blog/topics/threat-intelligence/emulation-of-malicious-shellcode-with-speakeasy"
+        ]
     },
     {
         "Name": "Sysinternal suite",
@@ -783,9 +674,7 @@
         "Source": [
             "winget",
             "Microsoft.Sysinternals.Suite"
-        ],
-        "Description": "Sysinternals Suite is a bundle of the Sysinternals utilities including Process Explorer, Process Monitor, Sysmon, Autoruns, ProcDump, all of the PsTools, and many more.",
-        "Documentation": "https://learn.microsoft.com/en-us/sysinternals/resources/"
+        ]
     },
     {
         "Name": "System Informer",
@@ -795,9 +684,7 @@
         "Source": [
             "winget",
             "WinsiderSS.SystemInformer"
-        ],
-        "Description": "System Informer is a free, powerful, multi-purpose tool that helps you monitor system resources, debug software and detect malware.",
-        "Documentation": "https://systeminformer.sourceforge.io"
+        ]
     },
     {
         "Name": "TTD",
@@ -808,9 +695,7 @@
         "Source": [
             "winget",
             "Microsoft.TimeTravelDebugging"
-        ],
-        "Description": "TTD is a command line utility that enables you to record program execution and replay it in WinDbg.",
-        "Documentation": "https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/time-travel-debugging-overview"
+        ]
     },
     {
         "Name": "uncompyle6",
@@ -821,9 +706,7 @@
         "Source": [
             "mise",
             "pypi:uncompyle6"
-        ],
-        "Description": "A native Python cross-version decompiler and fragment decompiler. The successor to decompyle, uncompyle, and uncompyle2.",
-        "Documentation": "https://github.com/rocky/python-uncompyle6"
+        ]
     },
     {
         "Name": "UniExtract2",
@@ -834,9 +717,7 @@
         "Source": [
             "mise",
             "github:Bioruebe/UniExtract2"
-        ],
-        "Description": "Universal Extractor 2 is a tool to extract files from any type of archive or installer.",
-        "Documentation": "https://github.com/Bioruebe/UniExtract2?tab=readme-ov-file"
+        ]
     },
     {
         "Name": "upx",
@@ -847,9 +728,7 @@
         "Source": [
             "winget",
             "UPX.UPX"
-        ],
-        "Description": "UPX is an advanced executable file compressor.",
-        "Documentation": "https://upx.github.io"
+        ]
     },
     {
         "Name": "VB Decompiler",
@@ -861,9 +740,7 @@
         "Source": [
             "other",
             "https://www.vb-decompiler.org/files/vb_decompiler_lite_84.zip"
-        ],
-        "Description": "Best code recovery solution for Visual Basic 5.0/6.0, Visual Basic .NET, and Visual C# applications. Fast and powerful x86, x64 and MS IL disassemblers for Visual Studio 6 and Visual Studio .NET compiled files.",
-        "Documentation": "https://www.vb-decompiler.org/documentation.htm"
+        ]
     },
     {
         "Name": "vcredist 2015+",
@@ -873,9 +750,7 @@
         "Source": [
             "winget",
             "Microsoft.VCRedist.2015+.x64"
-        ],
-        "Description": "The Microsoft Visual C++ 2015-2022 Redistributable Package (x64) installs runtime components of Visual C++ Libraries.",
-        "Documentation": ""
+        ]
     },
     {
         "Name": "VScode",
@@ -885,9 +760,7 @@
         "Source": [
             "winget",
             "Microsoft.VisualStudioCode"
-        ],
-        "Description": "Microsoft Visual Studio Code is a code editor.",
-        "Documentation": "https://code.visualstudio.com/docs"
+        ]
     },
     {
         "Name": "WinDbg",
@@ -898,9 +771,7 @@
         "Source": [
             "winget",
             "Microsoft.WinDbg"
-        ],
-        "Description": "WinDbg is a debugger that can be used to analyze crash dumps, debug live user-mode and kernel-mode code, and examine CPU registers and memory.",
-        "Documentation": "https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger"
+        ]
     },
     {
         "Name": "Windows Terminal",
@@ -910,9 +781,7 @@
         "Source": [
             "winget",
             "Microsoft.WindowsTerminal"
-        ],
-        "Description": "Terminal emulator from Microsoft",
-        "Documentation": "https://github.com/microsoft/terminal/wiki"
+        ]
     },
     {
         "Name": "Wireshark",
@@ -922,9 +791,7 @@
         "Source": [
             "winget",
             "WiresharkFoundation.Wireshark"
-        ],
-        "Description": " Wireshark is the world's foremost network protocol analyzer.",
-        "Documentation": "https://www.wireshark.org/docs"
+        ]
     },
     {
         "Name": "x64dbg",
@@ -934,9 +801,7 @@
         "Source": [
             "winget",
             "x64dbg.x64dbg"
-        ],
-        "Description": "An open-source binary debugger for Windows, aimed at malware analysis and reverse engineering of executables you do not have the source code for.",
-        "Documentation": "https://help.x64dbg.com/en/latest"
+        ]
     },
     {
         "Name": "YARA",
@@ -947,9 +812,7 @@
         "Source": [
             "winget",
             "VirusTotal.YARA-X"
-        ],
-        "Description": "YARA-X is a re-incarnation of YARA, a pattern matching tool designed with malware researchers in mind.",
-        "Documentation": "https://virustotal.github.io/yara-x/docs/intro/getting-started"
+        ]
     },
     {
         "Name": "xdis",
@@ -960,8 +823,7 @@
         "Source": [
             "mise",
             "pypi:xdis"
-        ],
-        "Description": "Test"
+        ]
     },
     {
         "Name": "XPEviewer",
@@ -971,9 +833,7 @@
         "Source": [
             "mise",
             "github:horsicq/XPEViewer"
-        ],
-        "Description": "PE file viewer/editor for Windows, Linux and MacOS.",
-        "Documentation": "https://github.com/horsicq/XPEViewer"
+        ]
     },
     {
         "Name": "Test",
