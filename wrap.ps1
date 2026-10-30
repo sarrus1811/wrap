@@ -119,7 +119,7 @@ function Invoke-VisualCppCheck {
     $BuildToolsId = "Microsoft.VisualStudio.BuildTools"
     $VCToolsWorkload = "Microsoft.VisualStudio.Workload.VCTools"
 
-    Write-Host "`n--- Checking for existing Visual C++ Build Tools ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking for existing Visual C++ Build Tools" -Alignment Left -Color Cyan
 
     $InstallCheck = winget list --id $BuildToolsId --exact 2>$null
     if ($InstallCheck -match $BuildToolsId) {
@@ -156,7 +156,7 @@ function Invoke-VisualCppCheck {
 # --- Environment / Pre-requisite Checks ---
 # Test internet connection over HTTPS
 function Test-Internet {
-    Write-Host "--- Checking Internet Connection ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking Internet Connection" -Alignment Left -Color Cyan
     
     $oldProgress = $ProgressPreference
     $ProgressPreference = "SilentlyContinue"
@@ -259,7 +259,8 @@ function Invoke-FolderCheck {
 # Check for git installations
 function Invoke-GitCheck {
     $GitPackageId = "Git.Git"
-    Write-Host "`n--- Checking for Git installation ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking for Git installation" -Alignment Left -Color Cyan
+    
 
     try {
         $GitPath = Get-Command git.exe -ErrorAction Stop | Select-Object -ExpandProperty Path
@@ -292,7 +293,7 @@ function Invoke-GitCheck {
 # Check for mise
 function Invoke-MiseCheck {
     $MisePackageId = "jdx.mise"
-    Write-Host "`n--- Checking for mise installation ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking for mise installation" -Alignment Left -Color Cyan
 
     try {
         $MisePath = Get-Command mise.exe -ErrorAction Stop | Select-Object -ExpandProperty Path
@@ -321,12 +322,138 @@ function Invoke-MiseCheck {
     }
 }
 
+# Bootstrap foundational language runtimes using mise
+function Invoke-MiseRuntimes {
+    Write-SpectreRule -Title "Bootstrapping Core Runtimes via mise" -Alignment Left -Color Cyan
+    $ConfigPath = "C:\WRAP\mise.toml"
+
+    if (-not (Test-Path $ConfigPath)) {
+        Write-Host "Creating base C:\WRAP\mise.toml configuration..." -ForegroundColor DarkGray
+        
+        $MiseConfig = @"
+[env]
+MISE_DATA_DIR = "C:\\WRAP\\mise"
+MISE_CACHE_DIR = "C:\\WRAP\\mise\\cache"
+
+[tools]
+python = "3.14"
+uv = "latest"
+node = "lts"
+go = "latest"
+rust = "latest"
+dotnet = "latest"
+java = "temurin-21"
+"@
+        Set-Content -Path $ConfigPath -Value $MiseConfig -Encoding UTF8
+    }
+
+    Write-Host "Installing runtimes (Python, Node, Rust, Go, .NET, Java). This may take a few minutes..." -ForegroundColor Yellow
+    
+    Push-Location "C:\WRAP"
+    & mise install
+    $exitCode = $LASTEXITCODE
+    Pop-Location
+
+    if ($exitCode -eq 0) {
+        Write-Host "[✓] Core runtimes installed successfully." -ForegroundColor Green
+    }
+    else {
+        Write-Host "[✗] Runtime installation failed with exit code $exitCode." -ForegroundColor Red
+    }
+}
+
+# Permanently add the WRAP mise shims to the User PATH
+function Invoke-MiseShimPath {
+    Write-SpectreRule -Title "Configuring mise PATH" -Alignment Left -Color Cyan
+    
+    $MiseShims = if (Test-Path "C:\WRAP\mise\shims") { "C:\WRAP\mise\shims" } else { "$env:LOCALAPPDATA\mise\shims" }
+    $WrapBin = "C:\WRAP\bin"
+    
+    if (-not (Test-Path $MiseShims)) {
+        New-Item -ItemType Directory -Path $MiseShims -Force | Out-Null
+    }
+    
+    # Configure JDK
+    $ExistingJava = Get-Command java.exe -ErrorAction SilentlyContinue
+    if (-not $ExistingJava -and -not (Test-Path "$env:JAVA_HOME")) {
+        Write-Host "Java not found in PATH. Configuring Java via mise..." -ForegroundColor Cyan
+        $JavaInstallDir = & mise where java 2>$null
+        
+        if ($JavaInstallDir -and (Test-Path $JavaInstallDir)) {
+            [Environment]::SetEnvironmentVariable("JAVA_HOME", $JavaInstallDir, "User")
+            $env:JAVA_HOME = $JavaInstallDir
+            Write-Host "[✓] JAVA_HOME set to: $JavaInstallDir" -ForegroundColor Green
+        }
+        else {
+            Write-Host '[!] Java runtime not found via mise. Ensure ' + "'java = ""temurin-21""'" + ' is in mise.toml.' -ForegroundColor Yellow
+        }
+    }
+    else {
+        Write-Host "[✓] Java is already configured in the environment (Path: $($ExistingJava.Source))." -ForegroundColor Green
+    }
+
+    $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    
+    if ($UserPath -notlike "*$WrapBin*") {
+        $cleanedPath = ($UserPath -split ';' | Where-Object { $_ -ne $MiseShims -and $_ -ne $WrapBin }) -join ';'
+        $newPath = "$WrapBin;$MiseShims;$cleanedPath"
+        [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+        Write-Host "[✓] Added WRAP bin and mise shims to User PATH." -ForegroundColor Green
+    }
+    else {
+        Write-Host "[✓] mise shims are already at the front of User PATH." -ForegroundColor Green
+    }
+
+    Repair-ReTools
+    
+    [Environment]::SetEnvironmentVariable("PATH", "$WrapBin;$MiseShims;$env:PATH", "Process")
+    $env:PATH = "$WrapBin;$MiseShims;$env:PATH"
+}
+
+# Automatically create direct Java wrappers for .jar files and regenerate mise shims
+# Automatically create direct Java wrappers for .jar files and regenerate mise shims
+function Repair-ReTools {
+    $BinDir = "C:\WRAP\bin"
+    if (-not (Test-Path $BinDir)) { New-Item -ItemType Directory -Path $BinDir -Force | Out-Null }
+
+    $NeedsReshim = $false
+
+    if (-not (Test-Path "$BinDir\apktool.cmd")) {
+        $ApkDir = & mise where "github:iBotPeaches/Apktool" 2>$null
+        if ($ApkDir -and (Test-Path $ApkDir)) {
+            $ApkJar = (Get-ChildItem -Path $ApkDir -Filter "*.jar" -Recurse | Select-Object -First 1).FullName
+            if ($ApkJar) {
+                Set-Content -Path "$BinDir\apktool.cmd" -Value "@java -jar `"$ApkJar`" %*"
+                Write-Host "[✓] Custom Java wrapper created for Apktool." -ForegroundColor Green
+                $NeedsReshim = $true
+            }
+        }
+    }
+
+    if (-not (Test-Path "$BinDir\bytecode-viewer.cmd")) {
+        $BcDir = & mise where "github:Konloch/bytecode-viewer" 2>$null
+        if ($BcDir -and (Test-Path $BcDir)) {
+            $BcJar = (Get-ChildItem -Path $BcDir -Filter "*.jar" -Recurse | Select-Object -First 1).FullName
+            if ($BcJar) {
+                Set-Content -Path "$BinDir\bytecode-viewer.cmd" -Value "@java -Djava.security.manager=allow -jar `"$BcJar`" %*"
+                Write-Host "[✓] Custom Java wrapper created for Bytecode Viewer." -ForegroundColor Green
+                $NeedsReshim = $true
+            }
+        }
+    }
+
+    if ($NeedsReshim) {
+        Write-Host "--- Re-linking Java and Reshimming RE Tools ---" -ForegroundColor Cyan
+        & mise reshim
+    }
+}
+
 # Check if Visual Studio Build tools are installed
 function Invoke-VisualCppCheck {
     $BuildToolsId = "Microsoft.VisualStudio.2022.BuildTools"
     $VCToolsWorkload = "Microsoft.VisualStudio.Workload.VCTools"
 
-    Write-Host "`n--- Checking for existing Visual C++ Build Tools ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking for existing Visual C++ Build Tools" -Alignment Left -Color Cyan
 
     $InstallCheck = winget list --id $BuildToolsId --exact 2>$null
     if ($InstallCheck -match $BuildToolsId) {
@@ -348,8 +475,7 @@ function Invoke-VisualCppCheck {
 
     try {
         & winget @wingetArgs
-        
-        # 3010 - exit code for "Success, but a reboot is required"
+        # Exit code 3010; 'Success and need to reboot'
         if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) { 
             Write-Host "[✓] Installation complete!" -ForegroundColor Green
         }
@@ -364,7 +490,8 @@ function Invoke-VisualCppCheck {
 
 # Check if PwshSpectreConsole is installed, and install if missing
 function Invoke-SpectreCheck {
-    Write-Host "`n--- Checking for PwshSpectreConsole ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking for PwshSpectreConsole" -Alignment Left -Color Cyan
+    
     if (Get-Module -ListAvailable -Name PwshSpectreConsole) {
         Write-Host "[✓] PwshSpectreConsole module found." -ForegroundColor Green
         return
@@ -386,7 +513,7 @@ function Invoke-SpectreCheck {
 }
 
 function Init {
-    Write-Host "`n--- Checking Prerequisites ---" -ForegroundColor Cyan
+    Write-SpectreRule -Title "Checking Prerequisites" -Alignment Left -Color Cyan
     
     $ScopeToCheck = "CurrentUser"
     Write-Host "Checking PowerShell Execution Policy for scope: $($ScopeToCheck)..." -ForegroundColor Yellow
@@ -402,10 +529,12 @@ function Init {
     Invoke-FolderCheck -Folders @("C:\WRAP", "C:\WRAP\bin", "C:\WRAP\mise", "C:\WRAP\plugins")
     Invoke-GitCheck
     Invoke-MiseCheck
+    Invoke-MiseShimPath
+    Invoke-MiseRuntimes
     Invoke-VisualCppCheck
     Invoke-SpectreCheck
     Import-Module PwshSpectreConsole -Global 
-    Write-Host "`n-------------------------------------" -ForegroundColor Cyan
+    Write-SpectreRule -Color Cyan
     if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
         Write-Host "Press Enter to continue..." -ForegroundColor Cyan
         $null = Read-Host
@@ -415,40 +544,37 @@ function Init {
 # --- Installation Helper Functions ---
 # Installs IDA plugins
 function Install-idaPlugins {
-    param(
-        [string]$Location
-    )
+    param([string]$Location)
     Write-Host "`nInstalling IDA plugins into $Location" -ForegroundColor Cyan
 
-    # Change to the IDA plugins directory before cloning
     $PluginPath = Join-Path $Location "plugins"
     if (-not (Test-Path $PluginPath)) { New-Item -ItemType Directory -Path $PluginPath | Out-Null }
-    Set-Location $PluginPath
-
-    Invoke-Expression "git clone https://github.com/mandiant/capa.git"
-    Invoke-Expression "git clone https://github.com/airbus-cert/comida.git"
-    Invoke-Expression "git clone https://github.com/danigargu/deREferencing.git"
-    Invoke-Expression "git clone https://github.com/joxeankoret/diaphora.git"
-    Invoke-Expression "git clone https://github.com/mandiant/flare-ida.git"
-    Invoke-Expression "git clone https://github.com/hasherezade/ida_ifl.git"
-    Invoke-Expression "git clone https://github.com/patois/xray.git"
-    Invoke-Expression "git clone https://github.com/mandiant/xrefer.git"
+    
+    Push-Location $PluginPath
+    git clone https://github.com/mandiant/capa.git
+    git clone https://github.com/airbus-cert/comida.git
+    git clone https://github.com/danigargu/deREferencing.git
+    git clone https://github.com/joxeankoret/diaphora.git
+    git clone https://github.com/mandiant/flare-ida.git
+    git clone https://github.com/hasherezade/ida_ifl.git
+    git clone https://github.com/patois/xray.git
+    git clone https://github.com/mandiant/xrefer.git
+    Pop-Location
 }
 
 # Install x64dbg plugins
 function Install-x64dbgPlugins {
-    param(
-        [string]$Location
-    )
+    param([string]$Location)
     Write-Host "`nInstalling x64dbg plugins into $Location" -ForegroundColor Cyan
 
     $PluginPath = Join-Path $Location "plugins"
     if (-not (Test-Path $PluginPath)) { New-Item -ItemType Directory -Path $PluginPath | Out-Null }
-    Set-Location $PluginPath
-
-    Invoke-Expression "git clone https://github.com/x64dbg/ScyllaHide.git"
-    Invoke-Expression "git clone https://github.com/mrexodia/TitanHide.git"
-    Invoke-Expression "git clone https://github.com/therealdreg/DbgChild.git"
+    
+    Push-Location $PluginPath
+    git clone https://github.com/x64dbg/ScyllaHide.git
+    git clone https://github.com/mrexodia/TitanHide.git
+    git clone https://github.com/therealdreg/DbgChild.git
+    Pop-Location
 }
 
 # Install program using Winget
@@ -463,7 +589,6 @@ function Invoke-WingetInstall {
 
     Write-Host "Executing winget install for $programName ($ID)..." -ForegroundColor Cyan
     
-    # Use array splatting instead of Invoke-Expression to safely handle args
     $wingetArgs = @(
         "install", "-e", $ID, 
         "--location", $location, 
@@ -477,8 +602,6 @@ function Invoke-WingetInstall {
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[✓] Successfully installed $programName." -ForegroundColor Green
-        
-        # Fixed dispatch logic
         if ($ID -ieq "Hex-Rays.IDA.Free") {
             Install-idaPlugins -Location $location
         }
@@ -494,17 +617,30 @@ function Invoke-WingetInstall {
 # Install using mise
 function Invoke-MiseInstall {
     param (
-        [Parameter(Mandatory = $true)][string]$MiseBackendSpec # e.g. "pypi:angr" or "github:hasherezade/pe-sieve"
+        [Parameter(Mandatory = $true)][string]$MiseBackendSpec
     )
-    
+
+    if ($MiseBackendSpec -match "^pypi:") {
+        Write-Host "`nPython package detected. Bootstrapping 'uv' into mise to handle the installation..." -ForegroundColor DarkGray
+        $uvArgs = @("use", "--global", "uv@latest")
+        & mise @uvArgs
+    }
+
     Write-Host "Executing mise install for: $MiseBackendSpec" -ForegroundColor Cyan
+
+    # Checks for packages with problematic build dependencies (e.g. stpyv8)
+    if ($MiseBackendSpec -match "peepdf") {
+        Write-Host "Detected package with complex native dependencies. Pre-installing build requirements..." -ForegroundColor Yellow
+        $uvPipArgs = @("pip", "install", "--global", "settings", "setuptools", "wheel")
+        & uv @uvPipArgs
+    }
     
-    # Run mise install. The @latest tag forces it to grab the newest version
-    $command = "mise use --global `"$MiseBackendSpec@latest`""
-    Invoke-Expression $command
+    $miseArgs = @("use", "--global", "$MiseBackendSpec@latest")
+    & mise @miseArgs
 
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "[✓] Successfully installed $MiseBackendSpec via mise." -ForegroundColor Green
+        & mise reshim
+        Write-Host "[✓] Successfully installed and reshimmed $MiseBackendSpec via mise." -ForegroundColor Green
     }
     else {
         Write-Host "[✗] mise installation failed for $MiseBackendSpec." -ForegroundColor Red
@@ -536,6 +672,77 @@ function Invoke-DirectInstall {
     Write-Host "[✓] Installed $ProgramName to $DestDir" -ForegroundColor Green
 }
 
+# Selection Install
+function Install-Selection {
+    param (
+        [Parameter(Mandatory = $true)]
+        [psobject[]]$List
+    )
+
+    # 1. Strip any accidental duplicate tool names from the dataset
+    $uniqueTools = $List | Group-Object Name | ForEach-Object { $_.Group[0] }
+
+    # 2. Group by category and use a safe prefix to prevent name collisions and markup crashes
+    $choiceGroups = $uniqueTools | Group-Object { 
+        $cat = if ($_.Category -and $_.Category.Count -gt 0) { $_.Category[0] } else { "Uncategorized" } 
+        "📂 $cat" 
+    } | Sort-Object Name | ForEach-Object {
+        @{
+            Name    = $_.Name
+            Choices = @($_.Group | Sort-Object Name)
+        }
+    }
+
+    # Prompt user with an interactive grouped checkbox list
+    $selectedTools = Read-SpectreMultiSelectionGrouped `
+        -Message "Select tools to install (Space to toggle, Enter to confirm)" `
+        -Choices $choiceGroups `
+        -ChoiceLabelProperty "Name" `
+        -PageSize 20 `
+        -Color Green
+
+    if (-not $selectedTools -or $selectedTools.Count -eq 0) {
+        Write-SpectreHost "`n[bold yellow]No tools selected. Returning to menu...[/]"
+        Start-Sleep -Seconds 1
+        return
+    }
+
+    Write-SpectreHost "`n[bold cyan]Starting batch installation of $($selectedTools.Count) tool(s)...[/]"
+    
+    foreach ($tool in $selectedTools) {
+        Install-Program -Program $tool
+    }
+
+    Write-SpectreHost "`n[bold green]Batch installation complete![/]"
+    Write-SpectreHost "[dim]Press Enter to continue...[/]"
+    $null = Read-Host
+}
+
+# Install everything
+function Install-Everything {
+    param (
+        [Parameter(Mandatory = $true)]
+        [psobject[]]$List
+    )
+    
+    Write-Host "`n[!] Initiating batch installation of all $($List.Count) tools. This will take some time..." -ForegroundColor Yellow
+    
+    foreach ($program in $List) {
+        try {
+            Install-Program -Program $program
+        }
+        catch {
+            Write-Host "[✗] Failed to install $($program.Name): $_" -ForegroundColor Red
+        }
+    }
+
+    Repair-ReTools
+    
+    Write-Host "`n[✓] Batch installation sequence complete!" -ForegroundColor Green
+    Write-Host "Press Enter to return to the menu..." -ForegroundColor Cyan
+    $null = Read-Host
+}
+
 # Main installer function
 function Install-Program {
     param (
@@ -551,7 +758,6 @@ function Install-Program {
                 Invoke-WingetInstall -Source $program.Source -programName $program.Name
             }
             "mise" {
-                # Setup Visual C++ Environment prior to compilation if marked in the schema
                 if ($program.RequiresCpp) {
                     Invoke-VisualCppCheck
                     Write-Host "Attempting C++ Build Environment setup for compilation..." -ForegroundColor Yellow
@@ -636,16 +842,20 @@ do {
     Write-SpectreHost "[bold cyan]WRAP - Windows Reverse-engineering & Analysis Platform[/]"
     
     $menuItems = @(
-        "1. Install Program by Name",
-        "2. Find",
+        "1. Install"
+        "2. Find and Install",
         "3. Install Everything",
-        "4. Exit"
+        "4. Find",
+        "5. Exit"
     )
 
     $opt = Read-SpectreSelection -Title "Select an action:" -Choices $menuItems -Color Green
 
     switch ($opt) {
-        "1. Install Program by Name" {
+        "1. Install" {
+            Install-Selection -List $list
+        }
+        "2. Find and Install" {
             $programName = Read-SpectreText -Message "Enter application name"
             $foundProgram = Get-ProgramByName -list $list -name $programName
             if ($foundProgram) {
@@ -653,15 +863,15 @@ do {
                 Install-Program -program $foundProgram
             }
         }
-        "2. Find" {
-            Invoke-FindFunctions -list $list
-        }
         "3. Install Everything" {
             Install-Everything -list $list
         }
-        "4. Exit" {
+        "4. Find" {
+            Invoke-FindFunctions -list $list
+        }
+        "5. Exit" {
             Write-SpectreHost "[bold yellow]Exiting...[/]"
-            break
+            exit 0
         }
     }
 } while ($true)

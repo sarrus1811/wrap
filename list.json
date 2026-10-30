@@ -2,7 +2,8 @@
     {
         "Name": "010 editor",
         "Category": [
-            "Hex editor"
+            "Hex editor",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -12,8 +13,8 @@
     {
         "Name": "7zip",
         "Category": [
-            "Compression",
-            "Archive"
+            "Archive",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -21,9 +22,23 @@
         ]
     },
     {
+        "Name": "adb",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Dynamic Analysis",
+            "Utility"
+        ],
+        "Source": [
+            "winget",
+            "Google.PlatformTools"
+        ]
+    },
+    {
         "Name": "Advanced Installer",
         "Category": [
-            "Packaging"
+            "Packaging",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -33,7 +48,8 @@
     {
         "Name": "Alacritty",
         "Category": [
-            "Terminal"
+            "Terminal",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -44,11 +60,76 @@
         "Name": "Angr",
         "Category": [
             "Python",
+            "Disassembler",
+            "Decompiler",
+            "Static Analysis",
             "Binary analysis"
         ],
         "Source": [
             "mise",
             "pypi:angr"
+        ]
+    },
+    {
+        "Name": "APKiD",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Static Analysis",
+            "Classification"
+        ],
+        "Source": [
+            "mise",
+            "pypi:apkid"
+        ]
+    },
+    {
+        "Name": "API Monitor",
+        "Category": [
+            "Dynamic Analysis",
+            "Monitoring",
+            "Windows"
+        ],
+        "Source": [
+            "other",
+            ""
+        ]
+    },
+    {
+        "Name": "Apktool",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Disassembler",
+            "Decompiler",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:iBotPeaches/Apktool"
+        ]
+    },
+    {
+        "Name": "Asar",
+        "Category": [
+            "Archive",
+            "Utility"
+        ],
+        "Source": [
+            "mise",
+            "npm:@electron/asar"
+        ]
+    },
+    {
+        "Name": "AutoIt-Ripper",
+        "Category": [
+            "AutoIt",
+            "Unpacker",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "pypi:autoit-ripper"
         ]
     },
     {
@@ -62,54 +143,12 @@
         ]
     },
     {
-        "Name": "API Monitor",
-        "Category": [
-            "Dynamic Analysis",
-            "Diagnostic"
-        ],
-        "Source": [
-            "other",
-            ""
-        ]
-    },
-    {
-        "Name": "Apktool",
-        "Category": [
-            "Android",
-            "Disassembler"
-        ],
-        "Source": [
-            "mise",
-            "github:iBotPeaches/Apktool"
-        ]
-    },
-    {
-        "Name": "Asar",
-        "Category": [
-            "Archive"
-        ],
-        "Source": [
-            "mise",
-            "npm:@electron/asar"
-        ]
-    },
-    {
-        "Name": "AutoIt-Ripper",
-        "Category": [
-            "AutoIt",
-            "Packaging"
-        ],
-        "Source": [
-            "mise",
-            "pypi:autoit-ripper"
-        ]
-    },
-    {
         "Name": "Binary Ninja",
         "Category": [
             "Disassembler",
+            "Decompiler",
             "Debugger",
-            "Decompiler"
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -119,7 +158,9 @@
     {
         "Name": "BinDiff",
         "Category": [
-            "Diff"
+            "Diff",
+            "Disassembler",
+            "Binary analysis"
         ],
         "Source": [
             "other",
@@ -127,10 +168,23 @@
         ]
     },
     {
+        "Name": "binwalk",
+        "Category": [
+            "Firmware",
+            "Static Analysis",
+            "Unpacker"
+        ],
+        "Source": [
+            "mise",
+            "pypi:binwalk"
+        ]
+    },
+    {
         "Name": "BlobRunner",
         "Category": [
             "Debugger",
-            "Binary analysis"
+            "Dynamic Analysis",
+            "Shellcode"
         ],
         "Source": [
             "mise",
@@ -138,12 +192,39 @@
         ]
     },
     {
+        "Name": "box-js",
+        "Category": [
+            "JavaScript",
+            "Sandbox",
+            "Document Analysis",
+            "Dynamic Analysis"
+        ],
+        "Source": [
+            "mise",
+            "npm:box-js"
+        ]
+    },
+    {
+        "Name": "Burp Suite Community",
+        "Category": [
+            "Network Analysis",
+            "Proxy",
+            "Dynamic Analysis"
+        ],
+        "Source": [
+            "winget",
+            "PortSwigger.BurpSuite.CommunityEdition"
+        ]
+    },
+    {
         "Name": "Bytecode Viewer",
         "Category": [
             "Android",
+            "Mobile",
             "Java",
             "Decompiler",
-            "Debugger"
+            "Debugger",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -153,7 +234,9 @@
     {
         "Name": "Capa",
         "Category": [
-            "Static Analysis"
+            "Static Analysis",
+            "Classification",
+            "Binary analysis"
         ],
         "Source": [
             "mise",
@@ -163,7 +246,9 @@
     {
         "Name": "CodeTrack",
         "Category": [
-            ".NET"
+            ".NET",
+            "Monitoring",
+            "Dynamic Analysis"
         ],
         "Source": [
             "other",
@@ -173,8 +258,8 @@
     {
         "Name": "CryptoTester",
         "Category": [
-            "Binary analysis",
             "Crypto",
+            "Static Analysis",
             "Diff"
         ],
         "Source": [
@@ -185,11 +270,11 @@
     {
         "Name": "Cutter",
         "Category": [
-            "Binary analysis",
+            "Disassembler",
             "Decompiler",
             "Debugger",
-            "Disassembler",
-            "Hex editor"
+            "Hex editor",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -202,7 +287,7 @@
             "Encryption",
             "Encoding",
             "Decryption",
-            "Compression"
+            "Utility"
         ],
         "Source": [
             "mise",
@@ -213,7 +298,9 @@
         "Name": "dex2jar",
         "Category": [
             "Android",
-            "Java"
+            "Mobile",
+            "Java",
+            "Decompiler"
         ],
         "Source": [
             "mise",
@@ -224,7 +311,8 @@
         "Name": "decompyle3",
         "Category": [
             "Python",
-            "Decompiler"
+            "Decompiler",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -234,9 +322,10 @@
     {
         "Name": "Detect-It-Easy",
         "Category": [
+            "Classification",
             "Static Analysis",
-            "Disassembler",
-            "Unpacker"
+            "Unpacker",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -246,7 +335,8 @@
     {
         "Name": "dll_to_exe",
         "Category": [
-            "Static Analysis"
+            "Utility",
+            "Windows"
         ],
         "Source": [
             "mise",
@@ -254,9 +344,24 @@
         ]
     },
     {
+        "Name": "dnSpyEx",
+        "Category": [
+            ".NET",
+            "Decompiler",
+            "Debugger",
+            "Dynamic Analysis",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:dnSpyEx/dnSpy"
+        ]
+    },
+    {
         "Name": "Edit",
         "Category": [
-            "Text Editor"
+            "Text Editor",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -266,7 +371,9 @@
     {
         "Name": "Exeinfope",
         "Category": [
-            "Static Analysis"
+            "Classification",
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "mise",
@@ -276,7 +383,8 @@
     {
         "Name": "Explorer Suite",
         "Category": [
-            "Binary analysis"
+            "PE Analysis",
+            "Static Analysis"
         ],
         "Source": [
             "other",
@@ -286,7 +394,9 @@
     {
         "Name": "fakenet-ng",
         "Category": [
-            "Network Analysis"
+            "Network Analysis",
+            "Dynamic Analysis",
+            "Sandbox"
         ],
         "Source": [
             "mise",
@@ -296,7 +406,8 @@
     {
         "Name": "FLOSS",
         "Category": [
-            "Static Analysis"
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -304,9 +415,23 @@
         ]
     },
     {
+        "Name": "frida-tools",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Dynamic Analysis",
+            "Debugger"
+        ],
+        "Source": [
+            "mise",
+            "pypi:frida-tools"
+        ]
+    },
+    {
         "Name": "GarbageMan",
         "Category": [
-            ".NET"
+            ".NET",
+            "Memory Forensics"
         ],
         "Source": [
             "mise",
@@ -317,8 +442,10 @@
         "Name": "Ghidra",
         "Category": [
             "Disassembler",
+            "Decompiler",
             "Debugger",
-            "Decompiler"
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "mise",
@@ -328,8 +455,9 @@
     {
         "Name": "goresolver",
         "Category": [
-            "Disassembler",
-            "Static Analysis"
+            "Go",
+            "Static Analysis",
+            "Disassembler"
         ],
         "Source": [
             "mise",
@@ -340,7 +468,8 @@
         "Name": "GoReSym",
         "Category": [
             "Go",
-            "Static Analysis"
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "mise",
@@ -350,7 +479,9 @@
     {
         "Name": "hashmyfiles",
         "Category": [
-            "Checksums"
+            "Checksums",
+            "Utility",
+            "Static Analysis"
         ],
         "Source": [
             "winget",
@@ -358,9 +489,25 @@
         ]
     },
     {
+        "Name": "hermes-dec",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Decompiler",
+            "Disassembler",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "pypi:hermes-dec"
+        ]
+    },
+    {
         "Name": "HollowsHunter",
         "Category": [
-            "Dynamic Analysis"
+            "Dynamic Analysis",
+            "Unpacker",
+            "Memory Forensics"
         ],
         "Source": [
             "mise",
@@ -370,7 +517,8 @@
     {
         "Name": "HxD",
         "Category": [
-            "Hex editor"
+            "Hex editor",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -380,9 +528,11 @@
     {
         "Name": "IDA Free",
         "Category": [
-            "Debugger",
+            "Disassembler",
             "Decompiler",
-            "Disassembler"
+            "Debugger",
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -393,7 +543,8 @@
         "Name": "ILSpy",
         "Category": [
             ".NET",
-            "Decompiler"
+            "Decompiler",
+            "Static Analysis"
         ],
         "Source": [
             "winget",
@@ -403,7 +554,8 @@
     {
         "Name": "ImHex",
         "Category": [
-            "Hex editor"
+            "Hex editor",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -414,7 +566,7 @@
         "Name": "Innoextract",
         "Category": [
             "Archive",
-            "Inno"
+            "Unpacker"
         ],
         "Source": [
             "winget",
@@ -424,8 +576,11 @@
     {
         "Name": "jadx",
         "Category": [
+            "Android",
+            "Mobile",
             "Java",
-            "Decompiler"
+            "Decompiler",
+            "Static Analysis"
         ],
         "Source": [
             "winget",
@@ -436,7 +591,8 @@
         "Name": "jd-gui",
         "Category": [
             "Java",
-            "Decompiler"
+            "Decompiler",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -446,7 +602,8 @@
     {
         "Name": "Magika",
         "Category": [
-            "Classification"
+            "Classification",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -457,7 +614,8 @@
         "Name": "malware-jail",
         "Category": [
             "JavaScript",
-            "Sandbox"
+            "Sandbox",
+            "Dynamic Analysis"
         ],
         "Source": [
             "mise",
@@ -465,9 +623,35 @@
         ]
     },
     {
+        "Name": "MemProcFS",
+        "Category": [
+            "Forensics",
+            "Memory Forensics",
+            "Dynamic Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:ufrisk/MemProcFS"
+        ]
+    },
+    {
+        "Name": "mitmproxy",
+        "Category": [
+            "Network Analysis",
+            "Proxy",
+            "Dynamic Analysis",
+            "CLI"
+        ],
+        "Source": [
+            "winget",
+            "mitmproxy.mitmproxy"
+        ]
+    },
+    {
         "Name": "NASM",
         "Category": [
-            "Assembler"
+            "Assembler",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -477,7 +661,8 @@
     {
         "Name": "Nmap",
         "Category": [
-            "Network Analysis"
+            "Network Analysis",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -485,9 +670,58 @@
         ]
     },
     {
+        "Name": "objection",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Dynamic Analysis",
+            "Debugger"
+        ],
+        "Source": [
+            "mise",
+            "pypi:objection"
+        ]
+    },
+    {
+        "Name": "oletools",
+        "Category": [
+            "Document Analysis",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "pypi:oletools"
+        ]
+    },
+    {
+        "Name": "OWASP ZAP",
+        "Category": [
+            "Network Analysis",
+            "Proxy",
+            "Dynamic Analysis"
+        ],
+        "Source": [
+            "winget",
+            "ZAP.ZAP"
+        ]
+    },
+    {
+        "Name": "peepdf-3",
+        "Category": [
+            "Document Analysis",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "pypi:peepdf-3"
+        ]
+    },
+    {
         "Name": "PE-bear",
         "Category": [
-            "Static Analysis"
+            "PE Analysis",
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "winget",
@@ -497,7 +731,9 @@
     {
         "Name": "pefile",
         "Category": [
-            "Static Analysis"
+            "PE Analysis",
+            "Static Analysis",
+            "Python"
         ],
         "Source": [
             "mise",
@@ -508,7 +744,8 @@
         "Name": "pe-sieve",
         "Category": [
             "Dynamic Analysis",
-            "Unpacker"
+            "Unpacker",
+            "Memory Forensics"
         ],
         "Source": [
             "mise",
@@ -518,7 +755,10 @@
     {
         "Name": "pestudio",
         "Category": [
-            "Static Analysis"
+            "PE Analysis",
+            "Static Analysis",
+            "Classification",
+            "Binary analysis"
         ],
         "Source": [
             "other",
@@ -526,19 +766,10 @@
         ]
     },
     {
-        "Name": "ProcDOT",
-        "Category": [
-            "Monitoring"
-        ],
-        "Source": [
-            "other",
-            "https://www.procdot.com/download/procdot/binaries/procdot_1_22_57_windows.zip"
-        ]
-    },
-    {
         "Name": "pe-unmapper",
         "Category": [
-            "Unpacker"
+            "Unpacker",
+            "Memory Forensics"
         ],
         "Source": [
             "mise",
@@ -546,11 +777,22 @@
         ]
     },
     {
+        "Name": "ProcDOT",
+        "Category": [
+            "Monitoring",
+            "Dynamic Analysis"
+        ],
+        "Source": [
+            "other",
+            "https://www.procdot.com/download/procdot/binaries/procdot_1_22_57_windows.zip"
+        ]
+    },
+    {
         "Name": "pyinstxtractor-ng",
         "Category": [
             "Python",
-            "Decompiler",
-            "Disassembler"
+            "Unpacker",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -558,22 +800,10 @@
         ]
     },
     {
-        "Name": "Rizin",
-        "Category": [
-            "Binary analysis",
-            "Decompiler",
-            "Debugger",
-            "Disassembler"
-        ],
-        "Source": [
-            "winget",
-            "Rizin.Rizin"
-        ]
-    },
-    {
         "Name": "RAT King Parser",
         "Category": [
-            "Threat hunting"
+            "Threat hunting",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -584,7 +814,8 @@
         "Name": "Recaf",
         "Category": [
             "Java",
-            "Decompiler"
+            "Decompiler",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -594,18 +825,20 @@
     {
         "Name": "redress",
         "Category": [
-            "Go"
+            "Go",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
-            "github:mandiant/gostringungarbler"
+            "github:goretk/redress"
         ]
     },
     {
         "Name": "RegCool",
         "Category": [
             "Windows",
-            "Registry"
+            "Registry",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -616,7 +849,8 @@
         "Name": "Regshot",
         "Category": [
             "Windows",
-            "Registry"
+            "Registry",
+            "Monitoring"
         ],
         "Source": [
             "mise",
@@ -626,7 +860,7 @@
     {
         "Name": "Resource Hacker",
         "Category": [
-            "Windows",
+            "PE Analysis",
             "Static Analysis"
         ],
         "Source": [
@@ -635,14 +869,41 @@
         ]
     },
     {
+        "Name": "Rizin",
+        "Category": [
+            "Disassembler",
+            "Decompiler",
+            "Debugger",
+            "Hex editor",
+            "Binary analysis"
+        ],
+        "Source": [
+            "winget",
+            "Rizin.Rizin"
+        ]
+    },
+    {
         "Name": "sclauncher",
         "Category": [
             "Debugger",
+            "Dynamic Analysis",
             "Shellcode"
         ],
         "Source": [
             "mise",
             "github:jstrosch/sclauncher"
+        ]
+    },
+    {
+        "Name": "scrcpy",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Utility"
+        ],
+        "Source": [
+            "winget",
+            "Genymobile.scrcpy"
         ]
     },
     {
@@ -659,7 +920,9 @@
     {
         "Name": "speakeasy",
         "Category": [
-            "Emulator"
+            "Emulator",
+            "Dynamic Analysis",
+            "Sandbox"
         ],
         "Source": [
             "mise",
@@ -669,7 +932,10 @@
     {
         "Name": "Sysinternal suite",
         "Category": [
-            "Monitoring"
+            "Monitoring",
+            "Windows",
+            "Utility",
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -679,7 +945,10 @@
     {
         "Name": "System Informer",
         "Category": [
-            "Monitoring"
+            "Monitoring",
+            "Windows",
+            "Utility",
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -690,7 +959,8 @@
         "Name": "TTD",
         "Category": [
             "Debugger",
-            "Windows"
+            "Windows",
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -698,10 +968,22 @@
         ]
     },
     {
+        "Name": "UEFITool",
+        "Category": [
+            "Firmware",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:LongSoft/UEFITool"
+        ]
+    },
+    {
         "Name": "uncompyle6",
         "Category": [
             "Python",
-            "Decompiler"
+            "Decompiler",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -722,8 +1004,8 @@
     {
         "Name": "upx",
         "Category": [
-            "Compression",
-            "Unpacker"
+            "Unpacker",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -735,7 +1017,8 @@
         "Category": [
             "Decompiler",
             "Disassembler",
-            ".NET"
+            ".NET",
+            "Static Analysis"
         ],
         "Source": [
             "other",
@@ -745,7 +1028,9 @@
     {
         "Name": "vcredist 2015+",
         "Category": [
-            "Runtime"
+            "Runtime",
+            "Utility",
+            "Windows"
         ],
         "Source": [
             "winget",
@@ -753,9 +1038,21 @@
         ]
     },
     {
+        "Name": "Volatility 3",
+        "Category": [
+            "Forensics",
+            "Memory Forensics"
+        ],
+        "Source": [
+            "mise",
+            "pypi:volatility3"
+        ]
+    },
+    {
         "Name": "VScode",
         "Category": [
-            "Text Editor"
+            "Text Editor",
+            "Utility"
         ],
         "Source": [
             "winget",
@@ -766,7 +1063,8 @@
         "Name": "WinDbg",
         "Category": [
             "Debugger",
-            "Windows"
+            "Windows",
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -776,7 +1074,9 @@
     {
         "Name": "Windows Terminal",
         "Category": [
-            "Terminal"
+            "Terminal",
+            "Utility",
+            "Windows"
         ],
         "Source": [
             "winget",
@@ -784,9 +1084,21 @@
         ]
     },
     {
+        "Name": "WinPmem",
+        "Category": [
+            "Forensics",
+            "Memory Forensics"
+        ],
+        "Source": [
+            "mise",
+            "github:Velocidex/WinPmem"
+        ]
+    },
+    {
         "Name": "Wireshark",
         "Category": [
-            "Network Analysis"
+            "Network Analysis",
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -796,7 +1108,9 @@
     {
         "Name": "x64dbg",
         "Category": [
-            "Debugger"
+            "Debugger",
+            "Windows",
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -804,21 +1118,11 @@
         ]
     },
     {
-        "Name": "YARA",
-        "Category": [
-            "Classification",
-            "Threat hunting"
-        ],
-        "Source": [
-            "winget",
-            "VirusTotal.YARA-X"
-        ]
-    },
-    {
         "Name": "xdis",
         "Category": [
             "Python",
-            "Disassembler"
+            "Disassembler",
+            "Static Analysis"
         ],
         "Source": [
             "mise",
@@ -826,13 +1130,40 @@
         ]
     },
     {
+        "Name": "XLMMacroDeobfuscator",
+        "Category": [
+            [
+                "Document Analysis",
+                "Static Analysis"
+            ]
+        ],
+        "Source": [
+            "mise",
+            "pypi:XLMMacroDeobfuscator"
+        ]
+    },
+    {
         "Name": "XPEviewer",
         "Category": [
-            "Static Analysis"
+            "PE Analysis",
+            "Static Analysis",
+            "Binary analysis"
         ],
         "Source": [
             "mise",
             "github:horsicq/XPEViewer"
+        ]
+    },
+    {
+        "Name": "YARA",
+        "Category": [
+            "Classification",
+            "Threat hunting",
+            "Static Analysis"
+        ],
+        "Source": [
+            "winget",
+            "VirusTotal.YARA-X"
         ]
     },
     {
