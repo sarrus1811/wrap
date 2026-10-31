@@ -26,8 +26,7 @@
         "Category": [
             "Android",
             "Mobile",
-            "Dynamic Analysis",
-            "Utility"
+            "Dynamic Analysis"
         ],
         "Source": [
             "winget",
@@ -205,6 +204,18 @@
         ]
     },
     {
+        "Name": "Brave Browser",
+        "Category": [
+            "Browser",
+            "Privacy",
+            "Utility"
+        ],
+        "Source": [
+            "winget",
+            "Brave.Brave"
+        ]
+    },
+    {
         "Name": "Burp Suite Community",
         "Category": [
             "Network Analysis",
@@ -241,6 +252,17 @@
         "Source": [
             "mise",
             "github:mandiant/capa"
+        ]
+    },
+    {
+        "Name": "Chrome",
+        "Category": [
+            "Browser",
+            "Utility"
+        ],
+        "Source": [
+            "other",
+            "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi"
         ]
     },
     {
@@ -333,6 +355,17 @@
         ]
     },
     {
+        "Name": "Didier Stevens Suite",
+        "Category": [
+            "Document Analysis",
+            "Static Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:DidierStevens/DidierStevensSuite"
+        ]
+    },
+    {
         "Name": "dll_to_exe",
         "Category": [
             "Utility",
@@ -404,6 +437,17 @@
         ]
     },
     {
+        "Name": "Mozilla Firefox",
+        "Category": [
+            "Browser",
+            "Utility"
+        ],
+        "Source": [
+            "winget",
+            "Mozilla.Firefox"
+        ]
+    },
+    {
         "Name": "FLOSS",
         "Category": [
             "Static Analysis",
@@ -436,6 +480,18 @@
         "Source": [
             "mise",
             "github:WithSecureLabs/GarbageMan"
+        ]
+    },
+    {
+        "Name": "Garak",
+        "Category": [
+            "Network Analysis",
+            "Threat hunting",
+            "Python"
+        ],
+        "Source": [
+            "mise",
+            "pypi:garak"
         ]
     },
     {
@@ -645,6 +701,19 @@
         "Source": [
             "winget",
             "mitmproxy.mitmproxy"
+        ]
+    },
+    {
+        "Name": "MobSF",
+        "Category": [
+            "Android",
+            "Mobile",
+            "Static Analysis",
+            "Dynamic Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:MobSF/Mobile-Security-Framework-MobSF"
         ]
     },
     {

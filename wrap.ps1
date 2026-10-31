@@ -1,4 +1,4 @@
-﻿# 1. Automatically Relaunch in PowerShell 7 as Administrator
+﻿# Automatically Relaunch in PowerShell 7 as Administrator
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
@@ -154,7 +154,7 @@ function Invoke-VisualCppCheck {
 }
 
 # --- Environment / Pre-requisite Checks ---
-# Test internet connection over HTTPS
+# Test internet connectionS
 function Test-Internet {
     Write-SpectreRule -Title "Checking Internet Connection" -Alignment Left -Color Cyan
     
@@ -362,7 +362,7 @@ java = "temurin-21"
     }
 }
 
-# Permanently add the WRAP mise shims to the User PATH
+# Permanently add the mise shims to the User PATH
 function Invoke-MiseShimPath {
     Write-SpectreRule -Title "Configuring mise PATH" -Alignment Left -Color Cyan
     
@@ -410,7 +410,6 @@ function Invoke-MiseShimPath {
     $env:PATH = "$WrapBin;$MiseShims;$env:PATH"
 }
 
-# Automatically create direct Java wrappers for .jar files and regenerate mise shims
 # Automatically create direct Java wrappers for .jar files and regenerate mise shims
 function Repair-ReTools {
     $BinDir = "C:\WRAP\bin"
@@ -488,7 +487,7 @@ function Invoke-VisualCppCheck {
     }
 }
 
-# Check if PwshSpectreConsole is installed, and install if missing
+# Check if PwshSpectreConsole is installed; install if missing
 function Invoke-SpectreCheck {
     Write-SpectreRule -Title "Checking for PwshSpectreConsole" -Alignment Left -Color Cyan
     
@@ -533,7 +532,13 @@ function Init {
     Invoke-MiseRuntimes
     Invoke-VisualCppCheck
     Invoke-SpectreCheck
-    Import-Module PwshSpectreConsole -Global 
+    Import-Module PwshSpectreConsole -Global
+    try {
+        winget settings --enable InstallerHashOverride *>&1 | Out-Null
+    }
+    catch {
+        Write-Host "[!] Failed to enable InstallerHashOverride." -ForegroundColor Yellow
+    } 
     Write-SpectreRule -Color Cyan
     if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
         Write-Host "Press Enter to continue..." -ForegroundColor Cyan
@@ -588,7 +593,7 @@ function Invoke-WingetInstall {
     $location = "C:\WRAP\$programName"
 
     Write-Host "Executing winget install for $programName ($ID)..." -ForegroundColor Cyan
-    
+
     $wingetArgs = @(
         "install", "-e", $ID, 
         "--location", $location, 
@@ -597,7 +602,7 @@ function Invoke-WingetInstall {
         "--accept-source-agreements", 
         "--disable-interactivity"
     )
-    
+   
     & winget @wingetArgs
 
     if ($LASTEXITCODE -eq 0) {
@@ -611,6 +616,30 @@ function Invoke-WingetInstall {
     }
     else {
         Write-Host "[✗] Winget installation failed for $programName with exit code $LASTEXITCODE." -ForegroundColor Red
+    }
+}
+
+# Create a Desktop Shortcut for GUI applications installed with winget
+function New-DesktopShortcut {
+    param (
+        [string]$TargetExecutable,
+        [string]$ShortcutName
+    )
+    
+    $DesktopPath = [Environment]::GetFolderPath("Desktop")
+    $ShortcutPath = Join-Path $DesktopPath "$ShortcutName.lnk"
+    
+    Write-Host "Creating desktop shortcut: $ShortcutName" -ForegroundColor Cyan
+    
+    try {
+        $WshShell = New-Object -ComObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+        $Shortcut.TargetPath = $TargetExecutable
+        $Shortcut.Save()
+        Write-Host "[✓] Shortcut created on Desktop." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "[✗] Failed to create shortcut: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
@@ -679,10 +708,7 @@ function Install-Selection {
         [psobject[]]$List
     )
 
-    # 1. Strip any accidental duplicate tool names from the dataset
     $uniqueTools = $List | Group-Object Name | ForEach-Object { $_.Group[0] }
-
-    # 2. Group by category and use a safe prefix to prevent name collisions and markup crashes
     $choiceGroups = $uniqueTools | Group-Object { 
         $cat = if ($_.Category -and $_.Category.Count -gt 0) { $_.Category[0] } else { "Uncategorized" } 
         "📂 $cat" 
@@ -693,7 +719,6 @@ function Install-Selection {
         }
     }
 
-    # Prompt user with an interactive grouped checkbox list
     $selectedTools = Read-SpectreMultiSelectionGrouped `
         -Message "Select tools to install (Space to toggle, Enter to confirm)" `
         -Choices $choiceGroups `
@@ -707,7 +732,11 @@ function Install-Selection {
         return
     }
 
-    Write-SpectreHost "`n[bold cyan]Starting batch installation of $($selectedTools.Count) tool(s)...[/]"
+    $toolNames = $selectedTools | ForEach-Object { $_.Name }
+    $toolListString = $toolNames -join ", "
+
+    Write-SpectreHost "`n[bold cyan]Starting batch installation of $($selectedTools.Count) tool(s) in total...[/]"
+    Write-SpectreHost "[bold yellow]Installing $toolListString[/]`n"
     
     foreach ($tool in $selectedTools) {
         Install-Program -Program $tool
