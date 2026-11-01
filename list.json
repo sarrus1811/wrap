@@ -91,7 +91,7 @@
         ],
         "Source": [
             "other",
-            ""
+            "https://github.com/jozefizso/apimonitor"
         ]
     },
     {
@@ -361,8 +361,8 @@
             "Static Analysis"
         ],
         "Source": [
-            "mise",
-            "github:DidierStevens/DidierStevensSuite"
+            "other",
+            "https://github.com/DidierStevens/DidierStevensSuite/archive/refs/heads/master.zip"
         ]
     },
     {
@@ -701,19 +701,6 @@
         "Source": [
             "winget",
             "mitmproxy.mitmproxy"
-        ]
-    },
-    {
-        "Name": "MobSF",
-        "Category": [
-            "Android",
-            "Mobile",
-            "Static Analysis",
-            "Dynamic Analysis"
-        ],
-        "Source": [
-            "mise",
-            "github:MobSF/Mobile-Security-Framework-MobSF"
         ]
     },
     {

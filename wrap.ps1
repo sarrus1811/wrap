@@ -329,7 +329,6 @@ function Invoke-MiseRuntimes {
 
     if (-not (Test-Path $ConfigPath)) {
         Write-Host "Creating base C:\WRAP\mise.toml configuration..." -ForegroundColor DarkGray
-        
         $MiseConfig = @"
 [env]
 MISE_DATA_DIR = "C:\\WRAP\\mise"
@@ -349,6 +348,7 @@ java = "temurin-21"
 
     Write-Host "Installing runtimes (Python, Node, Rust, Go, .NET, Java). This may take a few minutes..." -ForegroundColor Yellow
     
+    $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'Program Files\\dotnet' }) -join ';'
     Push-Location "C:\WRAP"
     & mise install
     $exitCode = $LASTEXITCODE
@@ -373,7 +373,6 @@ function Invoke-MiseShimPath {
         New-Item -ItemType Directory -Path $MiseShims -Force | Out-Null
     }
     
-    # Configure JDK
     $ExistingJava = Get-Command java.exe -ErrorAction SilentlyContinue
     if (-not $ExistingJava -and -not (Test-Path "$env:JAVA_HOME")) {
         Write-Host "Java not found in PATH. Configuring Java via mise..." -ForegroundColor Cyan
@@ -403,11 +402,6 @@ function Invoke-MiseShimPath {
     else {
         Write-Host "[✓] mise shims are already at the front of User PATH." -ForegroundColor Green
     }
-
-    Repair-ReTools
-    
-    [Environment]::SetEnvironmentVariable("PATH", "$WrapBin;$MiseShims;$env:PATH", "Process")
-    $env:PATH = "$WrapBin;$MiseShims;$env:PATH"
 }
 
 # Automatically create direct Java wrappers for .jar files and regenerate mise shims
@@ -447,7 +441,7 @@ function Repair-ReTools {
     }
 }
 
-# Check if Visual Studio Build tools are installed
+# Checks if Visual Studio Build tools are installed
 function Invoke-VisualCppCheck {
     $BuildToolsId = "Microsoft.VisualStudio.2022.BuildTools"
     $VCToolsWorkload = "Microsoft.VisualStudio.Workload.VCTools"
@@ -460,7 +454,7 @@ function Invoke-VisualCppCheck {
         return
     }
 
-    Write-Host "Visual C++ Build Tools not found. Starting silent installation (this WILL take several minutes/gigabytes)..." -ForegroundColor Yellow
+    Write-Host "Visual C++ Build Tools not found. Starting silent installation (this CAN take several minutes/gigabytes)..." -ForegroundColor Yellow
     
     $OverrideArgs = "--quiet --wait --norestart --add $VCToolsWorkload --includeRecommended"
 
@@ -487,7 +481,8 @@ function Invoke-VisualCppCheck {
     }
 }
 
-# Check if PwshSpectreConsole is installed; install if missing
+
+# Checks if PwshSpectreConsole is installed; install if missing
 function Invoke-SpectreCheck {
     Write-SpectreRule -Title "Checking for PwshSpectreConsole" -Alignment Left -Color Cyan
     
@@ -526,6 +521,22 @@ function Init {
     $null = Test-Defender
     $null = Test-WindowsUpdate
     Invoke-FolderCheck -Folders @("C:\WRAP", "C:\WRAP\bin", "C:\WRAP\mise", "C:\WRAP\plugins")
+    $DesktopPath = [Environment]::GetFolderPath("Desktop")
+    $WrapShortcutPath = Join-Path $DesktopPath "WRAP Home.lnk"
+    
+    if (-not (Test-Path $WrapShortcutPath)) {
+        Write-Host "Creating WRAP Home shortcut on desktop..." -ForegroundColor DarkGray
+        try {
+            $WshShell = New-Object -ComObject WScript.Shell
+            $Shortcut = $WshShell.CreateShortcut($WrapShortcutPath)
+            $Shortcut.TargetPath = "C:\WRAP"
+            $Shortcut.IconLocation = "shell32.dll, 4"
+            $Shortcut.Save()
+        }
+        catch {
+            Write-Host "[!] Failed to create WRAP desktop shortcut." -ForegroundColor Yellow
+        }
+    }
     Invoke-GitCheck
     Invoke-MiseCheck
     Invoke-MiseShimPath
@@ -656,14 +667,32 @@ function Invoke-MiseInstall {
     }
 
     Write-Host "Executing mise install for: $MiseBackendSpec" -ForegroundColor Cyan
+    $ToolName = $MiseBackendSpec.Split(':')[1].Split('@')[0]
 
-    # Checks for packages with problematic build dependencies (e.g. stpyv8)
-    if ($MiseBackendSpec -match "peepdf") {
+    #  Handle specific tool exceptions and build dependencies
+    if ($ToolName -ieq "peepdf") {
         Write-Host "Detected package with complex native dependencies. Pre-installing build requirements..." -ForegroundColor Yellow
         $uvPipArgs = @("pip", "install", "--global", "settings", "setuptools", "wheel")
         & uv @uvPipArgs
     }
     
+    if ($MiseBackendSpec -match "^dotnet:") {
+        if ($ToolName -ieq "sfextract") {
+            Write-Host "Detected sfextract requirement. Bootstrapping isolated .NET 8 SDK..." -ForegroundColor Yellow
+            & mise install dotnet@8 
+            $MiseDotNetPath = & mise where dotnet@8 2>$null
+        }
+        else {
+            Write-Host "Detected standard .NET tool requirement. Locating default .NET SDK..." -ForegroundColor DarkGray
+            $MiseDotNetPath = & mise where dotnet 2>$null
+        }
+        
+        if ($MiseDotNetPath) {
+            $env:DOTNET_ROOT = $MiseDotNetPath
+            $env:PATH = "$MiseDotNetPath;$env:PATH" 
+        }
+    }
+
     $miseArgs = @("use", "--global", "$MiseBackendSpec@latest")
     & mise @miseArgs
 
@@ -694,10 +723,16 @@ function Invoke-DirectInstall {
         Write-Host "Installing MSI package for $ProgramName..." -ForegroundColor Cyan
         Start-Process "msiexec.exe" -ArgumentList "/i `"$OutFile`" /qn /norestart INSTALLDIR=`"$DestDir`"" -Wait
     }
+    elseif ($FileName -match '\.exe$') {
+        Write-Host "Installing EXE package for $ProgramName..." -ForegroundColor Cyan
+        # Most standard EXEs (InnoSetup, Nullsoft) respect /S for silent installs
+        Start-Process $OutFile -ArgumentList "/S" -Wait
+    }
     elseif ($FileName -match '\.zip$') {
         Expand-Archive -Path $OutFile -DestinationPath $DestDir -Force
         Remove-Item $OutFile -Force
     }
+    
     Write-Host "[✓] Installed $ProgramName to $DestDir" -ForegroundColor Green
 }
 
@@ -736,7 +771,7 @@ function Install-Selection {
     $toolListString = $toolNames -join ", "
 
     Write-SpectreHost "`n[bold cyan]Starting batch installation of $($selectedTools.Count) tool(s) in total...[/]"
-    Write-SpectreHost "[bold yellow]Installing $toolListString[/]`n"
+    Write-SpectreHost "[bold yellow]Will install: $toolListString[/]`n"
     
     foreach ($tool in $selectedTools) {
         Install-Program -Program $tool
@@ -795,17 +830,18 @@ function Install-Program {
                 
                 Invoke-MiseInstall -MiseBackendSpec $program.Source[1]
             }
+            Default {
+                Write-Host "Installer type '$installer' not recognized. Cannot install $($program.Name)." -ForegroundColor Red
+            }
             "other" {
                 if ($Program.Source[1]) {
                     Invoke-DirectInstall -Url $Program.Source[1] -ProgramName $Program.Name
                 }
             }
-            Default {
-                Write-Host "Installer type '$installer' not recognized. Cannot install $($program.Name)." -ForegroundColor Red
-            }
         }
     }
 }
+
 # --- Menu Functions ---
 function Invoke-FindFunctions {
     param (
