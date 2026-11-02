@@ -1,4 +1,10 @@
-﻿# Automatically Relaunch in PowerShell 7 as Administrator
+﻿param (
+    [switch]$unattended,
+    [string[]]$category,
+    [string[]]$install
+)
+
+# Automatically Relaunch in PowerShell 7 as Administrator
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
@@ -27,92 +33,6 @@ if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
 
 $env:IgnoreSpectreEncoding = $true
 $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
-
-function Show-ProgramDetails {
-    param (
-        [psobject]$program
-    )
-    Write-Host "`n--- Program Details ---" -ForegroundColor Blue
-    Write-Host "Name: $($program.Name)"
-    Write-Host "Category: $($program.Category -join ', ')"
-    Write-Host "Source: $($program.Source -join ', ')"
-    Write-Host "Description: $($program.Description)"
-    Write-Host "Documentation: $($program.Documentation)"
-}
-
-function Get-ProgramList {
-    param (
-        [psobject[]]$list
-    )
-    Write-Host "Listing all the programs..." -ForegroundColor Blue
-    Write-Host "---------------------------" -ForegroundColor Blue
-    Write-Host "Name                                            Category"
-    Write-Host "----                                            --------"
-    foreach ($program in $list) {
-        if ($null -ne $program.Name -and $null -ne $program.Category) {
-            Write-Output ("{0,-47} {1}" -f $program.Name, ($program.Category -join ', '))
-        }
-    }
-}
-
-function Get-CategoryWithCounts {
-    param (
-        [psobject[]]$list
-    )
-    $categoryCounts = @{}
-    foreach ($item in $list) {
-        foreach ($category in $item.Category) {
-            if ($categoryCounts.ContainsKey($category)) {
-                $categoryCounts[$category]++
-            }
-            else {
-                $categoryCounts[$category] = 1
-            }
-        }
-    }
-    Write-Host "Category                      Count" -ForegroundColor Blue
-    Write-Host "--------                      -----" -ForegroundColor Blue
-    $categoryCounts.GetEnumerator() | Sort-Object Name | ForEach-Object {
-        Write-Output ("{0,-30} {1}" -f $_.Name, $_.Value)
-    }
-}
-
-function Get-ProgramsByCategory {
-    param (
-        [psobject[]]$list,
-        [string]$category
-    )
-    Write-Host "Name                            Category" -ForegroundColor Blue
-    Write-Host "----                            --------" -ForegroundColor Blue
-    foreach ($program in $list) {
-        if ($null -ne $program.Name -and $null -ne $program.Category) {
-            if ($program.Category -contains $category) {
-                Write-Output ("{0,-31} {1}" -f $program.Name, ($program.Category -join ', '))
-            }
-        }
-    }
-}
-
-function Get-ProgramByName {
-    param (
-        [psobject[]]$list,
-        [string]$name
-    )
-    try {
-        foreach ($program in $list) {
-            if ($program.Name -ieq $name) {
-                # returns the object. All output will be handled by the calling function.
-                return $program
-            }
-        }
-        return $null
-    }
-    catch {
-        Write-Error "An error occurred while processing the program list."
-        Write-Error $_.Exception.Message
-        return $null
-    }
-}
 
 # Check if Visual Studio Build tools are installed (Updated for VS 2026)
 function Invoke-VisualCppCheck {
@@ -448,16 +368,14 @@ function Invoke-VisualCppCheck {
 
     Write-SpectreRule -Title "Checking for existing Visual C++ Build Tools" -Alignment Left -Color Cyan
 
-    $InstallCheck = winget list --id $BuildToolsId --exact 2>$null
+    $InstallCheck = winget list --id $BuildToolsId --exact --accept-source-agreements 2>$null
     if ($InstallCheck -match $BuildToolsId) {
         Write-Host "[✓] Microsoft Visual Studio 2022 Build Tools found." -ForegroundColor Green
         return
     }
 
     Write-Host "Visual C++ Build Tools not found. Starting silent installation (this CAN take several minutes/gigabytes)..." -ForegroundColor Yellow
-    
     $OverrideArgs = "--quiet --wait --norestart --add $VCToolsWorkload --includeRecommended"
-
     $wingetArgs = @(
         "install", "-e", "--id", $BuildToolsId, 
         "--source", "winget", 
@@ -484,7 +402,12 @@ function Invoke-VisualCppCheck {
 
 # Checks if PwshSpectreConsole is installed; install if missing
 function Invoke-SpectreCheck {
-    Write-SpectreRule -Title "Checking for PwshSpectreConsole" -Alignment Left -Color Cyan
+    try {
+        Write-SpectreRule -Title "Checking for PwshSpectreConsole" -Align Left -Color Cyan
+    } 
+    catch [System.Management.Automation.CommandNotFoundException] {
+        Write-Host "--- Checking for PwshSpectreConsole ---" -ForegroundColor Cyan
+    }
     
     if (Get-Module -ListAvailable -Name PwshSpectreConsole) {
         Write-Host "[✓] PwshSpectreConsole module found." -ForegroundColor Green
@@ -495,9 +418,7 @@ function Invoke-SpectreCheck {
     
     try {
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue
-        
         Install-Module -Name PwshSpectreConsole -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
-        
         Write-Host "[✓] Successfully installed PwshSpectreConsole." -ForegroundColor Green
     }
     catch {
@@ -507,6 +428,7 @@ function Invoke-SpectreCheck {
 }
 
 function Init {
+    Invoke-SpectreCheck
     Write-SpectreRule -Title "Checking Prerequisites" -Alignment Left -Color Cyan
     
     $ScopeToCheck = "CurrentUser"
@@ -542,8 +464,8 @@ function Init {
     Invoke-MiseShimPath
     Invoke-MiseRuntimes
     Invoke-VisualCppCheck
-    Invoke-SpectreCheck
     Import-Module PwshSpectreConsole -Global
+    Add-MpPreference -ExclusionPath "C:\WRAP"
     try {
         winget settings --enable InstallerHashOverride *>&1 | Out-Null
     }
@@ -565,7 +487,7 @@ function Install-idaPlugins {
 
     $PluginPath = Join-Path $Location "plugins"
     if (-not (Test-Path $PluginPath)) { New-Item -ItemType Directory -Path $PluginPath | Out-Null }
-    
+
     Push-Location $PluginPath
     git clone https://github.com/mandiant/capa.git
     git clone https://github.com/airbus-cert/comida.git
@@ -604,16 +526,15 @@ function Invoke-WingetInstall {
     $location = "C:\WRAP\$programName"
 
     Write-Host "Executing winget install for $programName ($ID)..." -ForegroundColor Cyan
-
     $wingetArgs = @(
         "install", "-e", $ID, 
+        "--source", "winget", 
         "--location", $location, 
         "--silent", 
         "--accept-package-agreements", 
         "--accept-source-agreements", 
         "--disable-interactivity"
     )
-   
     & winget @wingetArgs
 
     if ($LASTEXITCODE -eq 0) {
@@ -630,7 +551,7 @@ function Invoke-WingetInstall {
     }
 }
 
-# Create a Desktop Shortcut for GUI applications installed with winget
+# Create a Desktop Shortcuts for GUI applications installed with winget
 function New-DesktopShortcut {
     param (
         [string]$TargetExecutable,
@@ -842,63 +763,136 @@ function Install-Program {
     }
 }
 
-# --- Menu Functions ---
-function Invoke-FindFunctions {
+# Update all installed tools via mise and winget
+function Invoke-ToolUpdate {
     param (
         [psobject[]]$list
     )
+    Write-SpectreHost "`n[bold cyan]Starting Environment Update...[/]"
 
-    $searchMenuItems = @(
-        "Find a program",
-        "Find programs by category",
-        "List all programs",
-        "List categories",
-        "List installed programs",
-        "Return to Main Menu"
-    )
-
-    Clear-Host
-    $selection = Read-SpectreSelection -Title "[bold yellow]--- Search Options ---[/]" -Choices $searchMenuItems -Color Blue
-
-    switch ($selection) {
-        "Find a program" {
-            $programName = Read-SpectreText -Message "Search for"
-            $foundProgram = Get-ProgramByName -list $list -name $programName
-            if ($null -ne $foundProgram) {
-                Show-ProgramDetails -program $foundProgram 
-            }
-            else {
-                Write-SpectreHost "[bold red]Program '$programName' not found.[/]"
-            }
+    # Update mise-managed tools
+    Write-SpectreRule -Title "Updating mise tools (CLI, Python, GitHub releases)" -Align Left -Color Yellow
+    try {
+        & mise upgrade
+        if ($LASTEXITCODE -eq 0) {
+            Write-SpectreHost "[bold green]Success: mise tools updated successfully.[/]"
         }
-        "Find programs by category" {
-            $inputCategory = Read-SpectreText -Message "Enter the category"
-            Get-ProgramsByCategory -list $list -category $inputCategory
-        }
-        "List all programs" {
-            Get-ProgramList $list
-        }
-        "List categories" {
-            Get-CategoryWithCounts $list
-        }
-        "List installed programs" {
-            Write-SpectreHost "[dim]Listing installed programs... (Pending implementation)[/]"
-        }
-        "Return to Main Menu" {
-            return
+        else {
+            Write-SpectreHost "[bold red]Error: mise update encountered errors (Exit Code: $LASTEXITCODE).[/]"
         }
     }
-    
-    Write-SpectreHost "`n[dim]Press any key to continue...[/]"
-    [System.Console]::ReadKey($true) | Out-Null
+    catch {
+        Write-SpectreHost "[bold red]Failed to execute mise upgrade: $($_.Exception.Message)[/]"
+    }
+
+    # Update winget-managed tools specified in list.json
+    Write-SpectreRule -Title "Updating specific winget tools" -Align Left -Color Yellow
+    try {
+        # Capture the output as an array even if there is only 1 result
+        $wingetIds = @($list | Where-Object { $_.Source -and $_.Source.Count -gt 0 -and $_.Source[0] -ieq "winget" } | ForEach-Object { $_.Source[1] })
+        if ($wingetIds.Count -gt 0 -and (-not [string]::IsNullOrWhiteSpace($wingetIds[0]))) {
+            Write-SpectreHost "[dim]Checking for updates on $($wingetIds.Count) curated tools...[/]"
+            $idListString = $wingetIds -join ","
+            $wingetArgs = @(
+                "upgrade", "--exact", "--id", $idListString, 
+                "--silent", 
+                "--accept-package-agreements", 
+                "--accept-source-agreements"
+            )
+            
+            & winget @wingetArgs
+            
+            if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 2316632066) {
+                # 2316632066 = No updates available
+                Write-SpectreHost "[bold green]Success: winget tools processed successfully.[/]"
+            }
+            else {
+                Write-SpectreHost "[bold red]Error: winget update encountered errors (Exit Code: $LASTEXITCODE).[/]"
+            }
+        }
+        else {
+            Write-SpectreHost "[dim]No updates on winget.[/]"
+        }
+    }
+    catch {
+        Write-SpectreHost "[bold red]Failed to execute winget upgrade: $($_.Exception.Message)[/]"
+    }
+
+    Write-SpectreHost "`n[bold green]Environment update complete![/]"
+    Write-SpectreHost "[dim]Press Enter to return to the menu...[/]"
+    $null = Read-Host
 }
 
 # ----------- Main Script Body (Execution) -------------
 $env:IgnoreSpectreEncoding = $true
 $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 
-$Data = Get-Content -Path ".\list.json" -Raw
-$list = $Data | ConvertFrom-Json
+try {
+    $Data = Get-Content -Path ".\list.json" -Raw
+    $list = $Data | ConvertFrom-Json
+}
+catch {
+    Write-Host "[✗] Fatal Error: Could not locate or parse 'list.json'. Ensure the file exists in the same directory." -ForegroundColor Red
+    exit 1
+}
+
+# Execution Branching (Headless vs. Interactive)
+if ($unattended) {
+    Write-Host "`n[!] Running in Headless Unattended Mode" -ForegroundColor Magenta
+    
+    if ($PSBoundParameters.ContainsKey('category') -and (-not $category)) {
+        Write-Host "[✗] No category given. Usage: -category utility (or -category utility, android)" -ForegroundColor Red
+        exit 1
+    }
+    if ($PSBoundParameters.ContainsKey('install') -and (-not $install)) {
+        Write-Host "[✗] No tool name given. Usage: -install ghidra (or -install ghidra, apktool)" -ForegroundColor Red
+        exit 1
+    }
+
+    $InstallList = @()
+    if ($category) {
+        $lowerCategory = $category | ForEach-Object { $_.ToLower() }
+        
+        if ($lowerCategory -contains "all") {
+            Write-Host "Category 'all' detected. Defaulting to full catalogue installation." -ForegroundColor Yellow
+            $InstallList = $list
+        }
+        else {
+            Write-Host "Filtering installations for Categories: $($category -join ', ')" -ForegroundColor Cyan
+            foreach ($TargetCategory in $lowerCategory) {
+                $Matched = $list | Where-Object { [string]$_.Category -match "\b$TargetCategory\b" }
+                if ($Matched) { $InstallList += $Matched }
+            }
+            Write-Host "category - $category"
+        }
+    }
+
+    if ($install -and ($lowerCategory -notcontains "all")) {
+        $lowerInstall = $install | ForEach-Object { $_.ToLower() }
+        
+        Write-Host "Filtering installations for Specific Tools: $($install -join ', ')" -ForegroundColor Cyan
+        foreach ($ToolName in $lowerInstall) {
+            $Matched = $list | Where-Object { [string]$_.Name -match "^$ToolName$" }
+            if ($Matched) { $InstallList += $Matched }
+        }
+    }
+
+    if ($InstallList) {
+        $InstallList = $InstallList | Select-Object -Unique
+    }
+
+    if (-not $InstallList) {
+        Write-Host "[✗] No tools found matching your criteria, or no criteria provided. Exiting." -ForegroundColor Red
+        exit 1
+    }
+    
+    Init
+    
+    Write-Host "`nProceeding with batch installation of $($InstallList.Count) tools..." -ForegroundColor Green
+    Install-Everything -list $InstallList
+    Write-Host "`n[✓] Unattended provisioning complete." -ForegroundColor Green
+    exit 0
+}
 
 Init
 
@@ -907,10 +901,10 @@ do {
     Write-SpectreHost "[bold cyan]WRAP - Windows Reverse-engineering & Analysis Platform[/]"
     
     $menuItems = @(
-        "1. Install"
-        "2. Find and Install",
+        "1. Install",
+        "2. Find",
         "3. Install Everything",
-        "4. Find",
+        "4. Update",
         "5. Exit"
     )
 
@@ -920,19 +914,68 @@ do {
         "1. Install" {
             Install-Selection -List $list
         }
-        "2. Find and Install" {
-            $programName = Read-SpectreText -Message "Enter application name"
-            $foundProgram = Get-ProgramByName -list $list -name $programName
-            if ($foundProgram) {
-                Show-ProgramDetails -program $foundProgram
-                Install-Program -program $foundProgram
+        "2. Find" {
+            $searchString = Read-SpectreText -Message "Enter application name to search: "
+            $foundPrograms = $list | Where-Object { $_.Name -match $searchString }
+            
+            if (-not $foundPrograms -or $foundPrograms.Count -eq 0) {
+                Write-SpectreHost "`n[bold red]Program matching '$searchString' not found in the catalogue.[/]"
+                Start-Sleep -Seconds 1
+            } 
+            elseif ($foundPrograms.Count -eq 1) {
+                $targetProgram = $foundPrograms[0]
+                Write-SpectreHost "`n[bold green]Found:[/] [bold yellow]$($targetProgram.Name)[/] ([dim]$($targetProgram.Category -join ', ')[/])"
+                
+                # To avoid the boolean pipeline quirk
+                $rawAnswer = Read-Host "Do you want to install $($targetProgram.Name)? [Y/N]"
+                if ($rawAnswer -match "^[Yy]") {
+                    Install-Program -program $targetProgram
+                }
+                if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
+                    Write-Host "Press Enter to continue..." -ForegroundColor Cyan
+                    $null = Read-Host
+                }
+            } 
+            else {
+                # Multi select
+                Write-SpectreHost "`n[bold cyan]Found $($foundPrograms.Count) matching programs:[/]"
+                $displayChoices = @()
+                foreach ($prog in $foundPrograms) {
+                    $displayChoices += @{
+                        Label          = "$($prog.Name) [dim]($($prog.Category -join ', '))[/]"
+                        OriginalObject = $prog
+                    }
+                }
+                
+                # Select which tools to install
+                $selectedItems = Read-SpectreMultiSelection `
+                    -Title "Select tools to install (Space to toggle, Enter to confirm):" `
+                    -Choices $displayChoices `
+                    -ChoiceLabelProperty "Label" `
+                    -Color Green
+                    
+                if ($selectedItems -and $selectedItems.Count -gt 0) {
+                    Write-SpectreHost "`n[bold cyan]Starting batch installation of $($selectedItems.Count) tool(s)...[/]"
+                    foreach ($item in $selectedItems) {
+                        Install-Program -program $item.OriginalObject
+                    }
+                }
+                Write-SpectreRule -Color Cyan
+                Write-SpectreHost "`n[bold cyan]Installed $($selectedItems.Count) tool(s)...[/]"
+                if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
+                    Write-Host "Press Enter to continue..." -ForegroundColor Cyan
+                    $null = Read-Host
+                }
+                else {
+                    Write-SpectreHost "`n[bold yellow]No tools selected for installation.[/]"
+                }
             }
         }
         "3. Install Everything" {
             Install-Everything -list $list
         }
-        "4. Find" {
-            Invoke-FindFunctions -list $list
+        "4. Update" {
+            Invoke-ToolUpdate
         }
         "5. Exit" {
             Write-SpectreHost "[bold yellow]Exiting...[/]"

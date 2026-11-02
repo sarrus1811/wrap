@@ -366,6 +366,18 @@
         ]
     },
     {
+        "Name": "Dissect",
+        "Category": [
+            "Threat Hunting",
+            "Forensics",
+            "Incident Response"
+        ],
+        "Source": [
+            "mise",
+            "pypi:dissect"
+        ]
+    },
+    {
         "Name": "dll_to_exe",
         "Category": [
             "Utility",
@@ -545,6 +557,18 @@
         ]
     },
     {
+        "Name": "Hayabusa",
+        "Category": [
+            "Detection Engineering",
+            "Event Log Analysis",
+            "Threat Hunting"
+        ],
+        "Source": [
+            "mise",
+            "github:Yamato-Security/hayabusa"
+        ]
+    },
+    {
         "Name": "hermes-dec",
         "Category": [
             "Android",
@@ -656,6 +680,17 @@
         ]
     },
     {
+        "Name": "KAPE",
+        "Category": [
+            "Forensics",
+            "Artifact Extraction"
+        ],
+        "Source": [
+            "other",
+            "http:https://github.com/EricZimmerman/KapeFiles/archive/refs/heads/master.zip"
+        ]
+    },
+    {
         "Name": "Magika",
         "Category": [
             "Classification",
@@ -664,6 +699,18 @@
         "Source": [
             "mise",
             "pypi:magika"
+        ]
+    },
+    {
+        "Name": "malcat",
+        "Category": [
+            "Malware Analysis",
+            "Hex Editor",
+            "Disassembler"
+        ],
+        "Source": [
+            "other",
+            "https://malcat.fr/latest/malcat_win313_lite.zip"
         ]
     },
     {
@@ -750,6 +797,17 @@
         ]
     },
     {
+        "Name": "Osquery",
+        "Category": [
+            "Threat Hunting",
+            "Endpoint Visibility"
+        ],
+        "Source": [
+            "winget",
+            "osquery.osquery"
+        ]
+    },
+    {
         "Name": "OWASP ZAP",
         "Category": [
             "Network Analysis",
@@ -830,6 +888,17 @@
         "Source": [
             "mise",
             "github:hasherezade/pe_unmapper"
+        ]
+    },
+    {
+        "Name": "Plaso (log2timeline)",
+        "Category": [
+            "Forensics",
+            "Timeline Analysis"
+        ],
+        "Source": [
+            "mise",
+            "github:log2timeline/plaso"
         ]
     },
     {
