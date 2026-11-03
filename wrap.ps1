@@ -30,50 +30,9 @@ if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
     }
 }
 
-# Check if Visual Studio Build tools are installed (Updated for VS 2026)
-function Invoke-VisualCppCheck {
-    $BuildToolsId = "Microsoft.VisualStudio.BuildTools"
-    $VCToolsWorkload = "Microsoft.VisualStudio.Workload.VCTools"
-
-    Write-SpectreRule -Title "Checking for existing Visual C++ Build Tools" -Alignment Left -Color Cyan
-
-    $InstallCheck = winget list --id $BuildToolsId --exact 2>$null
-    if ($InstallCheck -match $BuildToolsId) {
-        Write-Host "[✓] Microsoft Visual Studio Build Tools found." -ForegroundColor Green
-        return
-    }
-
-    Write-Host "Visual C++ Build Tools not found. Starting silent installation (this WILL take several minutes/gigabytes)..." -ForegroundColor Yellow
-    
-    $OverrideArgs = "--quiet --wait --norestart --add $VCToolsWorkload --includeRecommended"
-
-    $wingetArgs = @(
-        "install", "-e", "--id", $BuildToolsId, 
-        "--source", "winget", 
-        "--override", $OverrideArgs,
-        "--accept-package-agreements",
-        "--accept-source-agreements"
-    )
-
-    try {
-        & winget @wingetArgs
-        if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) { 
-            Write-Host "[✓] Installation complete!" -ForegroundColor Green
-        }
-        else {
-            Write-Host "[✗] Installation failed with exit code $LASTEXITCODE." -ForegroundColor Red
-        }
-    }
-    catch {
-        Write-Host "[✗] Installation failed. Error details: $($_.Exception.Message)" -ForegroundColor Red
-    }
-}
-
 # --- Environment / Pre-requisite Checks ---
 # Test internet connectionS
 function Test-Internet {
-    Write-SpectreRule -Title "Checking Internet Connection" -Alignment Left -Color Cyan
-    
     $oldProgress = $ProgressPreference
     $ProgressPreference = "SilentlyContinue"
     
@@ -175,9 +134,6 @@ function Invoke-FolderCheck {
 # Check for git installations
 function Invoke-GitCheck {
     $GitPackageId = "Git.Git"
-    Write-SpectreRule -Title "Checking for Git installation" -Alignment Left -Color Cyan
-    
-
     try {
         $GitPath = Get-Command git.exe -ErrorAction Stop | Select-Object -ExpandProperty Path
         Write-Host "[✓] Git found at: $GitPath" -ForegroundColor Green
@@ -209,8 +165,6 @@ function Invoke-GitCheck {
 # Check for mise
 function Invoke-MiseCheck {
     $MisePackageId = "jdx.mise"
-    Write-SpectreRule -Title "Checking for mise installation" -Alignment Left -Color Cyan
-
     try {
         $MisePath = Get-Command mise.exe -ErrorAction Stop | Select-Object -ExpandProperty Path
         Write-Host "[✓] mise found at: $MisePath" -ForegroundColor Green
@@ -240,7 +194,6 @@ function Invoke-MiseCheck {
 
 # Bootstrap foundational language runtimes using mise
 function Invoke-MiseRuntimes {
-    Write-SpectreRule -Title "Bootstrapping Core Runtimes via mise" -Alignment Left -Color Cyan
     $ConfigPath = "C:\WRAP\mise.toml"
 
     if (-not (Test-Path $ConfigPath)) {
@@ -280,8 +233,6 @@ java = "temurin-21"
 
 # Permanently add the mise shims to the User PATH
 function Invoke-MiseShimPath {
-    Write-SpectreRule -Title "Configuring mise PATH" -Alignment Left -Color Cyan
-    
     $MiseShims = if (Test-Path "C:\WRAP\mise\shims") { "C:\WRAP\mise\shims" } else { "$env:LOCALAPPDATA\mise\shims" }
     $WrapBin = "C:\WRAP\bin"
     
@@ -357,13 +308,10 @@ function Repair-ReTools {
     }
 }
 
-# Checks if Visual Studio Build tools are installed
+# Checks if Visual Studio Build tools are installed(Updated for VS 2026)
 function Invoke-VisualCppCheck {
     $BuildToolsId = "Microsoft.VisualStudio.2022.BuildTools"
     $VCToolsWorkload = "Microsoft.VisualStudio.Workload.VCTools"
-
-    Write-SpectreRule -Title "Checking for existing Visual C++ Build Tools" -Alignment Left -Color Cyan
-
     $InstallCheck = winget list --id $BuildToolsId --exact --accept-source-agreements 2>$null
     if ($InstallCheck -match $BuildToolsId) {
         Write-Host "[✓] Microsoft Visual Studio 2022 Build Tools found." -ForegroundColor Green
@@ -384,7 +332,7 @@ function Invoke-VisualCppCheck {
         & winget @wingetArgs
         # Exit code 3010; 'Success and need to reboot'
         if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq 3010) { 
-            Write-Host "[✓] Installation complete!" -ForegroundColor Green
+            Write-Host "[✓] Installation complete!, You may need to reboot" -ForegroundColor Green
         }
         else {
             Write-Host "[✗] Installation failed with exit code $LASTEXITCODE." -ForegroundColor Red
@@ -424,7 +372,9 @@ function Invoke-SpectreCheck {
 
 function Init {
     Invoke-SpectreCheck
-    Write-SpectreRule -Title "Checking Prerequisites" -Alignment Left -Color Cyan
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Checking Prerequisites" -Alignment Left -Color Cyan
+    }
     
     $ScopeToCheck = "CurrentUser"
     Write-Host "Checking PowerShell Execution Policy for scope: $($ScopeToCheck)..." -ForegroundColor Yellow
@@ -432,15 +382,23 @@ function Init {
     if ($currentPolicy -ne "Unrestricted") {
         Write-Host "[✗] - The execution policy for '$ScopeToCheck' is set to '$currentPolicy'. This is NOT Unrestricted." -ForegroundColor Red
     }
-    
+    else {
+        Write-Host "[✓] Is Administrator." -ForegroundColor Green
+    }
+
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Checking Internet Connection" -Alignment Left -Color Cyan
+    }
     $null = Test-Internet
-    $null = Test-Firewall
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Checking windows defender and Firewall status" -Alignment Left -Color Cyan
+    }
     $null = Test-Defender
-    $null = Test-WindowsUpdate
+    $null = Test-Firewall
+    
     Invoke-FolderCheck -Folders @("C:\WRAP", "C:\WRAP\bin", "C:\WRAP\mise", "C:\WRAP\plugins")
     $DesktopPath = [Environment]::GetFolderPath("Desktop")
     $WrapShortcutPath = Join-Path $DesktopPath "WRAP Home.lnk"
-    
     if (-not (Test-Path $WrapShortcutPath)) {
         Write-Host "Creating WRAP Home shortcut on desktop..." -ForegroundColor DarkGray
         try {
@@ -454,11 +412,32 @@ function Init {
             Write-Host "[!] Failed to create WRAP desktop shortcut." -ForegroundColor Yellow
         }
     }
+    
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Checking for Git installation" -Alignment Left -Color Cyan
+    }
     Invoke-GitCheck
+    
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Checking for mise installation" -Alignment Left -Color Cyan
+    }
     Invoke-MiseCheck
+    
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Configuring mise PATH" -Alignment Left -Color Cyan
+    }
     Invoke-MiseShimPath
+    
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Bootstrapping Core Runtimes via mise" -Alignment Left -Color Cyan
+    }
     Invoke-MiseRuntimes
+    
+    if (-not $unattended) {
+        Write-SpectreRule -Title "Checking for existing Visual C++ Build Tools" -Alignment Left -Color Cyan
+    }
     Invoke-VisualCppCheck
+
     Import-Module PwshSpectreConsole -Global
     Add-MpPreference -ExclusionPath "C:\WRAP"
     try {
@@ -467,10 +446,12 @@ function Init {
     catch {
         Write-Host "[!] Failed to enable InstallerHashOverride." -ForegroundColor Yellow
     } 
-    Write-SpectreRule -Color Cyan
-    if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
-        Write-Host "Press Enter to continue..." -ForegroundColor Cyan
-        $null = Read-Host
+    if (-not $unattended) {
+        Write-SpectreRule -Color Cyan
+        if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
+            Write-Host "Press Enter to continue..." -ForegroundColor Cyan
+            $null = Read-Host
+        }
     }
 }
 
@@ -511,15 +492,21 @@ function Install-x64dbgPlugins {
 }
 
 # Install programs using Winget
-# Install programs using Winget
 function Invoke-WingetInstall {
     param (
         [string[]]$Source,
         [string]$programName
     )
-
     $ID = $Source[1]
     $location = "C:\WRAP\$programName"
+    
+    Write-Host "`nChecking if $programName is already installed..." -ForegroundColor DarkGray
+    $checkInstall = winget list --id $ID --exact 2>$null
+    
+    if ($checkInstall -match $ID) {
+        Write-Host "[✓] $programName is already installed. Returning..."
+        return
+    }
 
     Write-Host "`nExecuting winget install for $programName ($ID)..." -ForegroundColor Cyan
     $wingetArgs = @(
@@ -535,35 +522,34 @@ function Invoke-WingetInstall {
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[✓] Successfully installed $programName." -ForegroundColor Green
-        
-        # Similar to DirectInstall function, Checks and relaunches envirnonment
         $PathToInject = ""
-        $exeName = "$([regex]::Escape($programName))\.exe$"
-        
-        $rootExe = Get-ChildItem -Path $location -File -Depth 0 | Where-Object { 
-            $_.Name -match "^$exeName" 
-        } | Select-Object -First 1
+        # Search recursively for files matching the program names
+        $targetFiles = Get-ChildItem -Path $location -File -Recurse -ErrorAction SilentlyContinue | Where-Object { 
+            $_.Name -match "^$([regex]::Escape($programName))\.exe$" -or 
+            $_.Name -match "^$([regex]::Escape($programName))\.bat$" -or
+            ($programName -match "Rizin" -and $_.Name -match "^rz\.exe$")
+        }
+        $targetExe = @($targetFiles)
 
-        if ($rootExe) {
-            $PathToInject = $location
+        if ($targetExe.Count -gt 0) {
+            $PathToInject = $targetExe[0].DirectoryName
         }
         else {
-            $targetFiles = Get-ChildItem -Path $location -File -Recurse | Where-Object { 
-                $_.Name -like "$programName.exe" -or $_.DirectoryName -match "bin$"
-            }
-            $targetExe = @($targetFiles)
-            
-            if ($targetExe.Count -gt 0) {
-                $PathToInject = $targetExe[0].DirectoryName
+            # Fallback: Search for a 'bin' directory explicitly
+            $binDir = Get-ChildItem -Path $location -Directory -Filter "bin" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($binDir) {
+                $PathToInject = $binDir.FullName
             }
             else {
-                $exeDirs = Get-ChildItem -Path $location -File -Include *.exe -Recurse | 
+                # Last Resort: Find the directory with the most executables
+                $exeDirs = Get-ChildItem -Path $location -File -Include *.exe -Recurse -ErrorAction SilentlyContinue | 
                 Group-Object DirectoryName | Sort-Object Count -Descending
                 $exeDir = @($exeDirs) | Select-Object -First 1
                 $PathToInject = if ($exeDir) { $exeDir.Name } else { $location }
             }
         }
 
+        # Inject the resolved path aggressively
         if (-not [string]::IsNullOrWhiteSpace($PathToInject)) {
             $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
             if ($machinePath -notmatch [regex]::Escape($PathToInject)) {
@@ -572,11 +558,10 @@ function Invoke-WingetInstall {
                 Write-Host "[✓] Added $PathToInject to Machine Registry PATH." -ForegroundColor DarkGray
             }
             if ($env:PATH -notmatch [regex]::Escape($PathToInject)) {
-                if ($env:PATH.EndsWith(";")) {
-                    $env:PATH = $env:PATH + $PathToInject
-                }
-                else {
-                    $env:PATH = $env:PATH + ";" + $PathToInject
+                $pathArray = @($env:PATH -split ';' | Where-Object { $_ -ne '' })
+                if ($pathArray -notcontains $PathToInject) {
+                    $pathArray += $PathToInject
+                    $env:PATH = $pathArray -join ';'
                 }
                 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Process")
                 Write-Host "[✓] Added $PathToInject to Current Session PATH." -ForegroundColor DarkGray
@@ -799,16 +784,24 @@ function Install-Selection {
     $null = Read-Host
 }
 
-# Install everything
-function Install-Everything {
+# Install Batch
+function Install-Batch {
     param (
         [Parameter(Mandatory = $true)]
-        [psobject[]]$List
+        [string[]]$ToolNames
     )
     
-    Write-Host "`n[!] Initiating batch installation of all $($List.Count) tools. This will take some time..." -ForegroundColor Yellow
+    Write-Host "`n[!] Initiating batch installation of $($ToolNames.Count) tools. This will take some time..." -ForegroundColor Yellow
     
-    foreach ($program in $List) {
+    foreach ($name in $ToolNames) {
+        # Resolve the string name to the full JSON object directly from $list
+        $program = $list | Where-Object { $_.Name -match "^$([regex]::Escape($name))$" } | Select-Object -First 1
+        
+        if ($null -eq $program) {
+            Write-Host "[✗] Failed to install $name - Tool not found in list.json" -ForegroundColor Red
+            continue
+        }
+
         try {
             Install-Program -Program $program
         }
@@ -820,8 +813,10 @@ function Install-Everything {
     Repair-ReTools
     
     Write-Host "`n[✓] Batch installation sequence complete!" -ForegroundColor Green
-    Write-Host "Press Enter to return to the menu..." -ForegroundColor Cyan
-    $null = Read-Host
+    if ($Host.UI.RawUI.KeyAvailable -or [System.Environment]::UserInteractive) {
+        Write-Host "Press Enter to return to the menu..." -ForegroundColor Cyan
+        $null = Read-Host
+    }
 }
 
 # Main installer function
@@ -936,56 +931,65 @@ catch {
 if ($unattended) {
     Write-Host "`n[!] Running in Headless Unattended Mode" -ForegroundColor Magenta
     
-    if ($PSBoundParameters.ContainsKey('category') -and (-not $category)) {
-        Write-Host "[✗] No category given. Usage: -category utility (or -category utility, android)" -ForegroundColor Red
+    if ($PSBoundParameters.ContainsKey('category') -and (-not $category -or $category.Count -eq 0)) {
+        Write-Host "[✗] No category given. Usage: -category utility (or -category utility android)" -ForegroundColor Red
         exit 1
     }
-    if ($PSBoundParameters.ContainsKey('install') -and (-not $install)) {
-        Write-Host "[✗] No tool name given. Usage: -install ghidra (or -install ghidra, apktool)" -ForegroundColor Red
+    
+    if ($PSBoundParameters.ContainsKey('install') -and (-not $install -or $install.Count -eq 0)) {
+        Write-Host "[✗] No tool name given. Usage: -install ghidra (or -install ghidra apktool)" -ForegroundColor Red
         exit 1
     }
 
-    $InstallList = @()
-    if ($category) {
-        $lowerCategory = $category | ForEach-Object { $_.ToLower() }
-        
-        if ($lowerCategory -contains "all") {
+    $ToolStringList = @()
+    
+    # Map by Category
+    if ($category -and $category.Count -gt 0) {
+        if ($category | Where-Object { $_ -match "^all$" }) {
             Write-Host "Category 'all' detected. Defaulting to full catalogue installation." -ForegroundColor Yellow
-            $InstallList = $list
+            $ToolStringList = $list | ForEach-Object { $_.Name }
         }
         else {
             Write-Host "Filtering installations for Categories: $($category -join ', ')" -ForegroundColor Cyan
-            foreach ($TargetCategory in $lowerCategory) {
-                $Matched = $list | Where-Object { [string]$_.Category -match "\b$TargetCategory\b" }
-                if ($Matched) { $InstallList += $Matched }
+            
+            # Use -contains for exact matching on the JSON Category array
+            foreach ($program in $list) {
+                if ($null -ne $program.Category) {
+                    $toolCategories = $program.Category | ForEach-Object { $_.ToLower() }
+                    foreach ($targetCat in $category) {
+                        if ($toolCategories -contains $targetCat.ToLower()) {
+                            $ToolStringList += $program.Name
+                            break
+                        }
+                    }
+                }
             }
-            Write-Host "category - $category"
         }
     }
 
-    if ($install -and ($lowerCategory -notcontains "all")) {
-        $lowerInstall = $install | ForEach-Object { $_.ToLower() }
-        
+    # Map by Specific Tool Names
+    if ($install -and $install.Count -gt 0) {
         Write-Host "Filtering installations for Specific Tools: $($install -join ', ')" -ForegroundColor Cyan
-        foreach ($ToolName in $lowerInstall) {
-            $Matched = $list | Where-Object { [string]$_.Name -match "^$ToolName$" }
-            if ($Matched) { $InstallList += $Matched }
+        foreach ($ToolName in $install) {
+            $ToolStringList += $ToolName
         }
     }
 
-    if ($InstallList) {
-        $InstallList = $InstallList | Select-Object -Unique
+    # Deduplicate the final list
+    if ($ToolStringList) {
+        $ToolStringList = $ToolStringList | Select-Object -Unique
     }
 
-    if (-not $InstallList) {
-        Write-Host "[✗] No tools found matching your criteria, or no criteria provided. Exiting." -ForegroundColor Red
+    if (-not $ToolStringList -or $ToolStringList.Count -eq 0) {
+        Write-Host "[✗] No tools provided after parsing. Exiting." -ForegroundColor Red
         exit 1
     }
     
     Init
     
-    Write-Host "`nProceeding with batch installation of $($InstallList.Count) tools..." -ForegroundColor Green
-    Install-Everything -list $InstallList
+    # Execute batch installation
+    Install-Batch -ToolNames $ToolStringList
+    
     Write-Host "`n[✓] Unattended provisioning complete." -ForegroundColor Green
     exit 0
 }
@@ -1066,7 +1070,7 @@ do {
             }
         }
         "3. Install Everything" {
-            Install-Everything -list $list
+            Install-Batch -list $list
         }
         "4. Update" {
             Invoke-ToolUpdate
