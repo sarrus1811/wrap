@@ -6,7 +6,6 @@
 
 # Automatically Relaunch in PowerShell 7 as Administrator
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
 if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
     Write-Host "Legacy PowerShell or standard privileges detected. Relaunching in PowerShell 7 as Administrator..." -ForegroundColor Yellow
     $pwshPath = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { 
@@ -30,9 +29,6 @@ if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
         exit
     }
 }
-
-$env:IgnoreSpectreEncoding = $true
-$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 
 # Check if Visual Studio Build tools are installed (Updated for VS 2026)
 function Invoke-VisualCppCheck {
@@ -399,7 +395,6 @@ function Invoke-VisualCppCheck {
     }
 }
 
-
 # Checks if PwshSpectreConsole is installed; install if missing
 function Invoke-SpectreCheck {
     try {
@@ -515,7 +510,8 @@ function Install-x64dbgPlugins {
     Pop-Location
 }
 
-# Install program using Winget
+# Install programs using Winget
+# Install programs using Winget
 function Invoke-WingetInstall {
     param (
         [string[]]$Source,
@@ -525,7 +521,7 @@ function Invoke-WingetInstall {
     $ID = $Source[1]
     $location = "C:\WRAP\$programName"
 
-    Write-Host "Executing winget install for $programName ($ID)..." -ForegroundColor Cyan
+    Write-Host "`nExecuting winget install for $programName ($ID)..." -ForegroundColor Cyan
     $wingetArgs = @(
         "install", "-e", $ID, 
         "--source", "winget", 
@@ -539,6 +535,54 @@ function Invoke-WingetInstall {
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[✓] Successfully installed $programName." -ForegroundColor Green
+        
+        # Similar to DirectInstall function, Checks and relaunches envirnonment
+        $PathToInject = ""
+        $exeName = "$([regex]::Escape($programName))\.exe$"
+        
+        $rootExe = Get-ChildItem -Path $location -File -Depth 0 | Where-Object { 
+            $_.Name -match "^$exeName" 
+        } | Select-Object -First 1
+
+        if ($rootExe) {
+            $PathToInject = $location
+        }
+        else {
+            $targetFiles = Get-ChildItem -Path $location -File -Recurse | Where-Object { 
+                $_.Name -like "$programName.exe" -or $_.DirectoryName -match "bin$"
+            }
+            $targetExe = @($targetFiles)
+            
+            if ($targetExe.Count -gt 0) {
+                $PathToInject = $targetExe[0].DirectoryName
+            }
+            else {
+                $exeDirs = Get-ChildItem -Path $location -File -Include *.exe -Recurse | 
+                Group-Object DirectoryName | Sort-Object Count -Descending
+                $exeDir = @($exeDirs) | Select-Object -First 1
+                $PathToInject = if ($exeDir) { $exeDir.Name } else { $location }
+            }
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($PathToInject)) {
+            $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+            if ($machinePath -notmatch [regex]::Escape($PathToInject)) {
+                $newMachinePath = "$machinePath;$PathToInject"
+                [Environment]::SetEnvironmentVariable("Path", $newMachinePath, "Machine")
+                Write-Host "[✓] Added $PathToInject to Machine Registry PATH." -ForegroundColor DarkGray
+            }
+            if ($env:PATH -notmatch [regex]::Escape($PathToInject)) {
+                if ($env:PATH.EndsWith(";")) {
+                    $env:PATH = $env:PATH + $PathToInject
+                }
+                else {
+                    $env:PATH = $env:PATH + ";" + $PathToInject
+                }
+                [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Process")
+                Write-Host "[✓] Added $PathToInject to Current Session PATH." -ForegroundColor DarkGray
+            }
+        }
+
         if ($ID -ieq "Hex-Rays.IDA.Free") {
             Install-idaPlugins -Location $location
         }
@@ -646,7 +690,6 @@ function Invoke-DirectInstall {
     }
     elseif ($FileName -match '\.exe$') {
         Write-Host "Installing EXE package for $ProgramName..." -ForegroundColor Cyan
-        # Most standard EXEs (InnoSetup, Nullsoft) respect /S for silent installs
         Start-Process $OutFile -ArgumentList "/S" -Wait
     }
     elseif ($FileName -match '\.zip$') {
@@ -655,6 +698,59 @@ function Invoke-DirectInstall {
     }
     
     Write-Host "[✓] Installed $ProgramName to $DestDir" -ForegroundColor Green
+    
+    # Search for a 'bin' directory, or fallback to the directory containing the most .exe files
+    $PathToInject = ""
+    
+    $targetFiles = Get-ChildItem -Path $DestDir -File -Recurse | Where-Object { 
+        $_.Name -like "$ProgramName.exe" -or $_.Name -like "$ProgramName.bat" 
+    }
+    $targetExe = @($targetFiles)
+
+    if ($targetExe.Count -gt 0) {
+        $PathToInject = $targetExe[0].DirectoryName
+    }
+    else {
+        # Fallback: Find the directory that contains the MOST .exe files
+        $exeDirs = Get-ChildItem -Path $DestDir -File -Include *.exe, *.bat -Recurse | 
+        Group-Object DirectoryName | Sort-Object Count -Descending
+                   
+        $exeDir = @($exeDirs) | Select-Object -First 1
+                  
+        $PathToInject = if ($exeDir) { $exeDir.Name } else { $DestDir }
+    }
+
+    Write-Host "Resolved Path for Injection: $PathToInject" -ForegroundColor DarkGray
+
+    # Inject the resolved path
+    if (-not [string]::IsNullOrWhiteSpace($PathToInject)) {
+        # Update the permanent Global Machine Registry
+        $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+        if ($machinePath -notmatch [regex]::Escape($PathToInject)) {
+            $newMachinePath = "$machinePath;$PathToInject"
+            [Environment]::SetEnvironmentVariable("Path", $newMachinePath, "Machine")
+            Write-Host "[✓] Added $PathToInject to Machine Registry PATH." -ForegroundColor DarkGray
+        }
+        else {
+            Write-Host "[✓] Path $PathToInject is already in the Machine Registry." -ForegroundColor DarkGray
+        }
+        
+        # Update the Current Session
+        if ($env:PATH -notmatch [regex]::Escape($PathToInject)) {
+            if ($env:PATH.EndsWith(";")) {
+                $env:PATH = $env:PATH + $PathToInject
+            }
+            else {
+                $env:PATH = $env:PATH + ";" + $PathToInject
+            }
+            [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Process")
+            Write-Host "[✓] Added $PathToInject to Current Session PATH." -ForegroundColor DarkGray
+        }
+    }
+    else {
+        Write-Host "[✗] Could not resolve a valid path to inject." -ForegroundColor Red
+    }
+    $null = $env:PATH
 }
 
 # Selection Install
@@ -909,7 +1005,6 @@ do {
     )
 
     $opt = Read-SpectreSelection -Title "Select an action:" -Choices $menuItems -Color Green
-
     switch ($opt) {
         "1. Install" {
             Install-Selection -List $list
@@ -926,7 +1021,7 @@ do {
                 $targetProgram = $foundPrograms[0]
                 Write-SpectreHost "`n[bold green]Found:[/] [bold yellow]$($targetProgram.Name)[/] ([dim]$($targetProgram.Category -join ', ')[/])"
                 
-                # To avoid the boolean pipeline quirk
+                # Avoid the boolean pipeline quirk
                 $rawAnswer = Read-Host "Do you want to install $($targetProgram.Name)? [Y/N]"
                 if ($rawAnswer -match "^[Yy]") {
                     Install-Program -program $targetProgram
@@ -947,7 +1042,6 @@ do {
                     }
                 }
                 
-                # Select which tools to install
                 $selectedItems = Read-SpectreMultiSelection `
                     -Title "Select tools to install (Space to toggle, Enter to confirm):" `
                     -Choices $displayChoices `
