@@ -1,7 +1,7 @@
 ﻿param (
     [switch]$unattended,
-    [string[]]$category,
-    [string[]]$install
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$arguments
 )
 
 # Automatically Relaunch in PowerShell 7 as Administrator
@@ -930,35 +930,55 @@ catch {
 # Execution Branching (Headless vs. Interactive)
 if ($unattended) {
     Write-Host "`n[!] Running in Headless Unattended Mode" -ForegroundColor Magenta
+    $install = @()
+    $category = @()
     
-    if ($PSBoundParameters.ContainsKey('category') -and (-not $category -or $category.Count -eq 0)) {
-        Write-Host "[✗] No category given. Usage: -category utility (or -category utility android)" -ForegroundColor Red
-        exit 1
+    # Parse the raw $arguments array to separate categories from installations
+    if ($arguments -and $arguments.Count -gt 0) {
+        $currentFlag = ""
+        
+        foreach ($arg in $arguments) {
+            if ($arg -eq "-category" -or $arg -eq "-install") {
+                $currentFlag = $arg
+                continue
+            }
+            
+            if ($currentFlag -eq "-category") {
+                $category += $arg
+            }
+            elseif ($currentFlag -eq "-install") {
+                $install += $arg
+            }
+        }
     }
-    
-    if ($PSBoundParameters.ContainsKey('install') -and (-not $install -or $install.Count -eq 0)) {
-        Write-Host "[✗] No tool name given. Usage: -install ghidra (or -install ghidra apktool)" -ForegroundColor Red
+
+    if ($category.Count -eq 0 -and $install.Count -eq 0) {
+        Write-Host "[✗] No valid flags or tools provided. Usage: -category utility OR -install 7zip" -ForegroundColor Red
         exit 1
     }
 
-    $ToolStringList = @()
+    # Use a Hashtable to inherently deduplicate tools by Name
+    $UniqueToolsMap = @{}
     
-    # Map by Category
-    if ($category -and $category.Count -gt 0) {
-        if ($category | Where-Object { $_ -match "^all$" }) {
+    # Map by Category 
+    if ($category.Count -gt 0) {
+        # To format the parsed categories safely and it to the array
+        $targetCategories = $category | ForEach-Object { $_.Trim().ToLower() }
+        
+        if ($targetCategories -contains "all") {
             Write-Host "Category 'all' detected. Defaulting to full catalogue installation." -ForegroundColor Yellow
-            $ToolStringList = $list | ForEach-Object { $_.Name }
+            foreach ($program in $list) { $UniqueToolsMap[$program.Name] = $true }
         }
         else {
-            Write-Host "Filtering installations for Categories: $($category -join ', ')" -ForegroundColor Cyan
+            Write-Host "Filtering installations for Categories: $($targetCategories -join ', ')" -ForegroundColor Cyan
             
-            # Use -contains for exact matching on the JSON Category array
             foreach ($program in $list) {
                 if ($null -ne $program.Category) {
-                    $toolCategories = $program.Category | ForEach-Object { $_.ToLower() }
-                    foreach ($targetCat in $category) {
-                        if ($toolCategories -contains $targetCat.ToLower()) {
-                            $ToolStringList += $program.Name
+                    $toolCategories = $program.Category | ForEach-Object { $_.Trim().ToLower() }
+                    
+                    foreach ($target in $targetCategories) {
+                        if ($toolCategories -contains $target) {
+                            $UniqueToolsMap[$program.Name] = $true
                             break
                         }
                     }
@@ -968,29 +988,36 @@ if ($unattended) {
     }
 
     # Map by Specific Tool Names
-    if ($install -and $install.Count -gt 0) {
-        Write-Host "Filtering installations for Specific Tools: $($install -join ', ')" -ForegroundColor Cyan
-        foreach ($ToolName in $install) {
-            $ToolStringList += $ToolName
+    # Formats the cleanly parsed installs and builds the map for Install-Batch
+    if ($install.Count -gt 0) {
+        $targetInstalls = $install | ForEach-Object { $_.Trim().ToLower() }
+        Write-Host "Filtering installations for Specific Tools: $($targetInstalls -join ', ')" -ForegroundColor Cyan
+        foreach ($program in $list) {
+            if ($null -ne $program.Name) {
+                $toolName = $program.Name.ToLower()
+                foreach ($target in $targetInstalls) {
+                    if ($toolName -match [regex]::Escape($target)) {
+                        $UniqueToolsMap[$program.Name] = $true
+                        break
+                    }
+                }
+            }
         }
     }
 
-    # Deduplicate the final list
-    if ($ToolStringList) {
-        $ToolStringList = $ToolStringList | Select-Object -Unique
-    }
+    # Convert the Hashtable keys back into a flat array of strings
+    $ToolStringList = @($UniqueToolsMap.Keys)
 
     if (-not $ToolStringList -or $ToolStringList.Count -eq 0) {
-        Write-Host "[✗] No tools provided after parsing. Exiting." -ForegroundColor Red
+        Write-Host "[✗] No tools found matching your criteria. Exiting." -ForegroundColor Red
         exit 1
     }
     
     Init
     
-    # Execute batch installation
+    # Execute batch installation natively passing the array of strings
     Install-Batch -ToolNames $ToolStringList
     
-    Write-Host "`n[✓] Unattended provisioning complete." -ForegroundColor Green
     exit 0
 }
 
