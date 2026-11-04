@@ -12,4 +12,4 @@ Scripts for setting up a reverse engineering system on Windows.
 - While this is written with Windows 11 in mind, it should also work with windows 10 as the long required components are installed and available.
 
 ## Thanks
-Thanks to [arkbtw](https://github.com/arkbtw) for helping with winget related technicalities.
+Thanks to [arkbtw](https://github.com/arkbtw) for helping with winget related technicalities and UX suggestions.
