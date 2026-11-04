@@ -31,7 +31,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7 -or -not $isAdmin) {
 }
 
 # --- Environment / Pre-requisite Checks ---
-# Test internet connectionS
+# Test internet connection
 function Test-Internet {
     $oldProgress = $ProgressPreference
     $ProgressPreference = "SilentlyContinue"
@@ -961,8 +961,8 @@ if ($unattended) {
     $UniqueToolsMap = @{}
     
     # Map by Category 
+    # To format the parsed categories safely and it to the array
     if ($category.Count -gt 0) {
-        # To format the parsed categories safely and it to the array
         $targetCategories = $category | ForEach-Object { $_.Trim().ToLower() }
         
         if ($targetCategories -contains "all") {
@@ -1052,7 +1052,7 @@ do {
                 $targetProgram = $foundPrograms[0]
                 Write-SpectreHost "`n[bold green]Found:[/] [bold yellow]$($targetProgram.Name)[/] ([dim]$($targetProgram.Category -join ', ')[/])"
                 
-                # Avoid the boolean pipeline quirk
+                # To avoid the boolean pipeline quirk
                 $rawAnswer = Read-Host "Do you want to install $($targetProgram.Name)? [Y/N]"
                 if ($rawAnswer -match "^[Yy]") {
                     Install-Program -program $targetProgram
